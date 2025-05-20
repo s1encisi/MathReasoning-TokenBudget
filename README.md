@@ -245,7 +245,8 @@ sbatch --nodes=2 slurm/train.slurm --model Qwen2.5-1.5B-Instruct --task grpo --c
 
 See the [Launching jobs on a Slurm cluster](#launching-jobs-on-a-slurm-cluster) section for more details.
 
-### GRPO dataset filtering
+#### GRPO dataset filtering
+
 We provide support to filter datasets by generating and computing pass rate on veriable tasks, see this [README](scripts/pass_rate_filtering/README.md)
 
 #### 👨‍💻 Training with a code interpreter
@@ -399,6 +400,31 @@ sbatch --job-name=open_r1 --nodes=2 slurm/train.slurm --model Qwen2.5-1.5B-Instr
 
 > [!NOTE]
 > The configuration in `slurm/train.slurm` is optimised for the Hugging Face Compute Cluster and may require tweaking to be adapted to your own compute nodes.
+
+### Customising the dataset mixture
+
+To combine multiple datasets as a single training mixture, you can specify the `dataset_mixture` parameter in the YAML config file. Here's a template for how to do this:
+
+```yaml
+dataset_mixture:
+  datasets:                     # List of datasets to include in the mixture
+    - id: dataset_1             # Hub dataset ID
+      config: config_name_1     # Name of the dataset config
+      split: split_1            # Split to use from the dataset
+      columns:                  # Columns to keep
+        - column_1              
+        - column_2    
+      weight: 0.25              # Fraction of dataset to use
+    - id: dataset_2
+      config: config_name_2
+      split: split_2
+      columns:                  
+        - column_1              
+        - column_2   
+      weight: 0.5
+  seed: 42                      # Seed for shuffling the combined dataset
+  test_split_size: 0.1          # Fraction of mixture to use for a test split
+```
 
 ## Evaluating models
 
