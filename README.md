@@ -1,3 +1,13 @@
+# MathReasoning-TokenBudget
+
+基于 Open-R1 的数学推理 SFT→GRPO 与生成 token 成本研究。
+
+**状态：初始基线，尚无本项目的独立实验结果。** 项目定位、上游来源与计划见 [PROJECT.md](PROJECT.md)。
+
+以下保留 [Open-R1](https://github.com/huggingface/open-r1) 的上游说明与作者归属；其中的结果属于上游项目。
+
+---
+
 # Open R1
 
 *A fully open reproduction of DeepSeek-R1. This repo is a work in progress, let's build it together!*
