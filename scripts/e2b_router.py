@@ -27,6 +27,9 @@ from e2b_code_interpreter.models import Execution
 from dotenv import load_dotenv
 from e2b_code_interpreter import AsyncSandbox
 
+from open_r1.i18n import t
+from open_r1.i18n.argparse_help import make_parser
+
 load_dotenv()
 
 class BatchRequest(BaseModel):
@@ -148,10 +151,12 @@ def parse_args():
     Returns:
         argparse.Namespace: Parsed command-line arguments as an object.
     """
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--host", default="0.0.0.0")
-    parser.add_argument("--port", type=int, default=8000)
-    parser.add_argument("--max_num_sandboxes", type=int, default=20)
+    parser = make_parser()
+    parser.add_argument("--host", default="0.0.0.0", help=t("cli.morph_router.help.host"))
+    parser.add_argument("--port", type=int, default=8000, help=t("cli.morph_router.help.port"))
+    parser.add_argument(
+        "--max_num_sandboxes", type=int, default=20, help=t("cli.morph_router.help.max_num_sandboxes")
+    )
     return parser.parse_args()
 
 if __name__ == "__main__":

@@ -1,0 +1,391 @@
+{
+  "_comment": "简体中文（中国大陆）。缺省语言。键名结构须与 en_US.json 保持一致，可用 open_r1.i18n.missing_keys('zh_CN') 校验完整性。",
+  "meta": {
+    "name": "Simplified Chinese",
+    "native_name": "简体中文",
+    "direction": "ltr"
+  },
+  "fmt": {
+    "number": {
+      "group_sep": ",",
+      "decimal_sep": ".",
+      "group_size": 3,
+      "decimals": 2,
+      "compact_units": [
+        {"threshold": 100000000, "suffix": "亿"},
+        {"threshold": 10000, "suffix": "万"}
+      ]
+    },
+    "percent": {
+      "pattern": "{value}%",
+      "decimals": 2
+    },
+    "currency": {
+      "default": "CNY",
+      "pattern": "{symbol}{value}",
+      "decimals": 2,
+      "symbols": {
+        "_opaque": true,
+        "CNY": "¥",
+        "USD": "US$",
+        "EUR": "€",
+        "GBP": "£",
+        "JPY": "JP¥"
+      }
+    },
+    "date": {
+      "short": "{YYYY}-{MM}-{DD}",
+      "long": "{YYYY}年{M}月{D}日",
+      "weekday_names": ["星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"]
+    },
+    "time": {
+      "medium": "{HH}:{mm}:{ss}",
+      "short": "{HH}:{mm}"
+    },
+    "datetime": {
+      "short": "{YYYY}-{MM}-{DD} {HH}:{mm}:{ss}",
+      "long": "{YYYY}年{M}月{D}日 {HH}:{mm}:{ss}"
+    },
+    "width": {
+      "ambiguous_wide": false
+    },
+    "units": {
+      "second": "秒",
+      "minute": "分钟",
+      "hour": "小时",
+      "sample": "条",
+      "row": "行"
+    },
+    "wrap": {
+      "line_start_forbidden": "。，、；：？！）】》」』”’…～·,.!?:;)]}%",
+      "line_end_forbidden": "（【《「『“‘([{$"
+    }
+  },
+  "argparse": {
+    "usage": "用法：",
+    "options": "选项",
+    "optional_arguments": "可选参数：",
+    "positional_arguments": "位置参数",
+    "heading": "%(heading)s：",
+    "subcommands": "子命令",
+    "help": "显示此帮助信息并退出",
+    "default_suffix": "（默认值：%(default)s）",
+    "error": "%(prog)s: 错误：%(message)s\n",
+    "warning": "%(prog)s: 警告：%(message)s\n",
+    "unrecognized_arguments": "无法识别的参数：%s",
+    "required_arguments": "缺少以下必需参数：%s",
+    "one_of_required": "以下参数至少需要提供一个：%s",
+    "expected_one_argument": "需要一个取值",
+    "expected_at_least_one": "至少需要一个取值",
+    "expected_at_most_one": "最多只能有一个取值",
+    "invalid_choice": "无效取值：%(value)r（可选值：%(choices)s）",
+    "invalid_value": "无效的 %(type)s 取值：%(value)r",
+    "argument_prefix": "参数 %(argument_name)s：%(message)s",
+    "mutually_exclusive": "不能与参数 %s 同时使用",
+    "ambiguous_option": "选项有歧义：%(option)s 可能匹配 %(matches)s",
+    "ignored_explicit_argument": "已忽略显式参数 %r"
+  },
+  "cli": {
+    "generate": {
+      "description": "运行 distilabel 流水线，使用 DeepSeek R1 生成回复",
+      "help": {
+        "hf_dataset": "要加载的 HuggingFace 数据集",
+        "hf_dataset_config": "要使用的数据集配置",
+        "hf_dataset_split": "要使用的数据集分片",
+        "prompt_column": "数据集中存放提示词的列",
+        "prompt_template": "用于格式化提示词的模板字符串。",
+        "model": "生成所用的模型名称",
+        "vllm_server_url": "vLLM 服务地址",
+        "temperature": "生成的温度参数",
+        "top_p": "生成的 top-p 参数",
+        "max_new_tokens": "生成的最大新 token 数",
+        "num_generations": "每道题的生成次数",
+        "input_batch_size": "输入处理的批大小",
+        "client_replicas": "并行处理的客户端副本数",
+        "timeout": "请求超时时间（秒，默认：600）",
+        "retries": "请求失败后的重试次数（默认：0）",
+        "hf_output_dataset": "结果推送到的 HuggingFace 仓库",
+        "private": "推送到 HF Hub 时是否将输出数据集设为私有"
+      }
+    },
+    "decontaminate": {
+      "help": {
+        "dataset": "要检查污染的数据集名称。",
+        "config": "要加载的数据集配置名称。",
+        "split": "要检查污染的数据集分片，默认为 `train`。",
+        "ngram_size": "构建的 n-gram 大小，默认为 8。",
+        "problem_column": "存放题目（提示词）的列名。",
+        "cleanup": "推送数据集前是否移除受污染的样本行。",
+        "new_dataset_name": "数据集的新名称。若未提供，则复用原名称并追加 `_decontaminated` 后缀。"
+      }
+    },
+    "tensor_parallel": {
+      "help": {
+        "model_name": "Hugging Face 模型名称或路径",
+        "revision": "模型修订版本（如适用）",
+        "default_tp": "默认张量并行规模（通常等于单节点 GPU 数）"
+      }
+    },
+    "reasoning": {
+      "help": {
+        "dataset_name": "要加载的 HuggingFace 数据集",
+        "output_file": "生成结果追加写入的 JSONL 文件路径",
+        "prompt_column": "数据集中存放提示词的列",
+        "uuid_column": "用于去重已处理样本的标识列",
+        "api_addr": "OpenAI 兼容服务地址，格式为 `主机:端口`",
+        "num_generations": "每道题的生成次数",
+        "prompt_template": "用于格式化提示词的模板字符串，必须包含 `{prompt}` 占位符。",
+        "temperature": "生成的温度参数",
+        "top_p": "生成的 top-p 参数",
+        "max_tokens": "生成的最大新 token 数",
+        "max_concurrent": "最大并发请求数"
+      }
+    },
+    "benchmarks": {
+      "help": {
+        "model_id": "推送模型所用的 Hub 模型 ID。",
+        "model_revision": "推送模型所用的 Hub 模型分支。",
+        "trust_remote_code": "是否信任远端代码。",
+        "benchmarks": "训练结束后运行的基准测试。",
+        "list_benchmarks": "列出所有支持的基准测试。",
+        "system_prompt": "基准测试使用的系统提示词。"
+      }
+    },
+    "morph_router": {
+      "help": {
+        "host": "服务绑定的主机名或 IP 地址",
+        "port": "服务监听的端口",
+        "max_num_sandboxes": "可同时创建的沙箱最大数量",
+        "api_key": "MorphCloud API 密钥；未提供时回退到 MORPH_API_KEY 环境变量"
+      }
+    },
+    "configs": {
+      "script": {
+        "dataset_name": "数据集名称。若使用 dataset_mixture 则可省略。",
+        "dataset_mixture": "用于创建数据集混合的配置，支持洗牌等高级选项。"
+      },
+      "grpo": {
+        "benchmarks": "训练结束后运行的基准测试。",
+        "callbacks": "训练期间运行的回调。",
+        "chat_template": "使用的对话模板。",
+        "hub_model_revision": "推送模型的 Hub 分支。",
+        "num_completions_to_print": "打印的补全条数。",
+        "overwrite_hub_revision": "是否覆盖已有的 Hub 修订版本。",
+        "push_to_hub_revision": "是否推送到某个 Hub 修订版本/分支。",
+        "system_prompt": "可选的系统提示词。",
+        "wandb_log_unique_prompts": "是否将去重后的提示词记录到 wandb。开启后会为每个唯一提示词创建一次新的运行。",
+        "wandb_entity": "运行记录所属的实体（团队或用户名）。",
+        "wandb_project": "运行记录所属的项目名。",
+        "wandb_run_group": "运行记录所属的分组名。"
+      },
+      "sft": {
+        "benchmarks": "训练结束后运行的基准测试。",
+        "callbacks": "训练期间运行的回调。",
+        "chat_template": "使用的对话模板。",
+        "system_prompt": "基准测试使用的可选系统提示词。",
+        "hub_model_revision": "推送模型的 Hub 分支。",
+        "overwrite_hub_revision": "是否覆盖已有的 Hub 修订版本。",
+        "push_to_hub_revision": "是否推送到某个 Hub 修订版本/分支。",
+        "wandb_entity": "运行记录所属的实体（团队或用户名）。",
+        "wandb_project": "运行记录所属的项目名。",
+        "wandb_run_group": "运行记录所属的分组名。"
+      },
+      "grpo_script": {
+        "reward_funcs": "奖励函数列表。可选值：'accuracy'、'format'、'reasoning_steps'、'cosine'、'repetition_penalty'、'length'、'tag_count'、'code'、'code_format'、'ioi_code'、'soft_overlong_punishment'。",
+        "cosine_min_value_wrong": "错误答案的最小奖励",
+        "cosine_max_value_wrong": "错误答案的最大奖励",
+        "cosine_min_value_correct": "正确答案的最小奖励",
+        "cosine_max_value_correct": "正确答案的最大奖励",
+        "cosine_max_len": "余弦缩放使用的最大长度",
+        "repetition_n_grams": "重复惩罚奖励使用的 n-gram 大小",
+        "repetition_max_penalty": "重复惩罚奖励的最大（负向）惩罚值",
+        "code_language": "代码格式奖励使用的语言。基于 E2B 支持的语言 https://e2b.dev/docs/code-interpreting/supported-languages",
+        "code_eval_test_batch_size": "对每条生成结果并行评估这么多个测试用例，一旦有失败（得 0 分）即停止评估，否则继续下一批。可避免评测服务过载，并省下错误解的评估时间。",
+        "code_eval_scoring_mode": "是否将通过测试用例的比例作为奖励。若为 false 则使用 0/1 计分。",
+        "parallel_code_exec_per_proc": "每个进程并行的 E2B 代码执行数量。默认值 2 适用于 E2B 免费档（Hobby）配合 8 张 GPU 训练的场景。",
+        "dataset_prompt_column": "用作训练提示词的列。",
+        "e2b_router_url": "E2B 路由器的地址，参见 scripts/e2b_router.py",
+        "morph_router_url": "MorphCloud 路由器的地址，参见 scripts/morph_router.py",
+        "code_provider": "代码执行的提供方。可选：'e2b'、'local'、'morph'。",
+        "ioi_provider": "IOI 代码执行的提供方。可选：'piston'、'morph'。",
+        "max_completion_len": "补全的最大字符数。",
+        "soft_punish_cache": "补全的最小字符数。"
+      }
+    }
+  },
+  "error": {
+    "configs": {
+      "dataset_source_required": "必须提供 `dataset_name` 或 `dataset_mixture` 其中之一",
+      "dataset_mixture_shape": "dataset_mixture 必须是包含 'datasets' 键的字典。期望格式：{'datasets': [...], 'seed': int}",
+      "datasets_must_be_list": "'datasets' 必须由数据集配置组成的列表",
+      "columns_inconsistent": "混合数据集中各数据集配置的列名必须保持一致。发现不同的列集合：{columns}"
+    },
+    "data": {
+      "no_datasets_loaded": "混合配置中没有加载到任何数据集",
+      "dataset_source_required": "必须提供 `dataset_name` 或 `dataset_mixture` 其中之一"
+    },
+    "grpo": {
+      "prompt_column_unsupported": "数据集题目字段错误：{column} 不受支持。"
+    },
+    "pass_rate": {
+      "prompt_column_unsupported": "数据集题目字段错误：{column} 不受支持。"
+    },
+    "callbacks": {
+      "unknown_callback": "回调 {name} 未在 CALLBACKS 中找到。"
+    },
+    "evaluation": {
+      "unknown_benchmark": "未知的基准测试：{benchmark}"
+    },
+    "hub": {
+      "revision_exists": "修订版本 {revision} 已存在。请使用 --overwrite_hub_revision 覆盖它。"
+    },
+    "rewards": {
+      "max_penalty_positive": "max_penalty {max_penalty} 不应为正数",
+      "jieba_required": "使用中文请先安装 jieba",
+      "language_not_implemented": "语言 `{language}` 的分词尚未实现。请自行实现 zip-ngram 函数。",
+      "mixed_language": "所有 verification_info 必须使用同一种语言",
+      "verify_failed": "校验失败：{error}，答案：{answer}，标准答案：{gold}",
+      "parse_gold_failed": "解析标准答案失败：{solution}",
+      "e2b_worker": "来自 {provider_type} 工作节点的错误：{error}",
+      "piston_worker": "来自 Piston 工作节点的错误：{error}"
+    },
+    "code_providers": {
+      "morph_api_key_missing": "未找到 MorphCloud API 密钥。请设置 MORPH_API_KEY 环境变量。",
+      "morph_import_missing": "MorphCloud 不可用，而该执行提供方依赖它。请执行 `pip install morphcloud` 安装 MorphCloud，并在 `.env` 文件中添加 API 密钥。",
+      "morph_deps_missing": "缺少必需的 MorphCloud 依赖：{error}",
+      "dotenv_missing": "警告：未安装 python-dotenv。环境变量必须直接设置。",
+      "unknown_provider": "未知的提供方类型：{provider_type}",
+      "operation_timed_out": "操作超时",
+      "e2b_executor": "E2B 执行器错误：{error}",
+      "e2b_executor_async": "E2B 异步执行器错误：{error}",
+      "e2b_script": "来自 E2B 沙箱 ID {sandbox_id} 的 `_run_script` 错误：{error}",
+      "e2b_kill": "终止沙箱 ID {sandbox_id} 时 E2B 执行器报错：{error}",
+      "morph_router": "MorphCloud 路由器错误：{error}",
+      "morph_executor": "MorphCloud 执行器错误：{error}"
+    },
+    "piston": {
+      "endpoints_required": "IOI/CF 题目需要运行本项目 IOI 包的 Piston 端点。请在 `.env` 文件的 PISTON_ENDPOINTS 变量中填入有效的 Piston 端点列表。",
+      "no_endpoints": "未提供 Piston 端点。请检查 PISTON_ENDPOINTS 环境变量。",
+      "endpoint_failed": "检查端点 {endpoint} 时出错，已将其剔除（{error}）",
+      "retrying": "将在 {delay:.2f} 秒后重试 [{endpoint_id}] {endpoint} - {error}",
+      "propagating": "正在向上抛出异常 {type}：{error}",
+      "release_failed": "释放端点 {endpoint} 时出错：{error}"
+    },
+    "morph": {
+      "problem_id_unknown": "无法从文件中确定题目 ID",
+      "api_key_required": "需要设置 MORPH_API_KEY 环境变量",
+      "instance_timeout": "准备实例超时：{error}",
+      "exec_timeout_retry": "执行超时，正在重试（{attempt}/{max_retries}）",
+      "exec_timeout_exhausted": "多次重试后执行仍然超时",
+      "exec_failed_retry": "执行失败：{type}：{error}，将在 {delay:.2f} 秒后重试（{attempt}/{max_retries}）",
+      "exec_failed": "重试 {max_retries} 次后执行仍然失败：{type}：{error}",
+      "exec_failed_multiple": "多次重试后执行仍然失败：{error}"
+    },
+    "cf": {
+      "invalid_language": "无效的提交语言：{language}",
+      "scoring_failed": "为提交评分时出错：{error}",
+      "invalid_scoring_mode": "无效的评分模式：{mode}",
+      "tests_folder_unset": "未设置 CF_TESTS_FOLDER 环境变量！请先下载 Codeforces 生成的测试数据，并将 CF_TESTS_FOLDER 指向该目录。详见 https://huggingface.co/datasets/open-r1/codeforces",
+      "tests_folder_missing": "CF_TESTS_FOLDER 路径 '{path}' 不存在！请先下载 Codeforces 生成的测试数据，并将 CF_TESTS_FOLDER 指向该目录。详见 https://huggingface.co/datasets/open-r1/codeforces"
+    },
+    "router": {
+      "morph_api_key_missing": "未提供 MorphCloud API 密钥。请设置 MORPH_API_KEY 环境变量，或使用 --api_key 参数。"
+    },
+    "sandbox": {
+      "request_failed": "请求失败，状态码：{status}",
+      "morph_request_failed": "发往 MorphCloud 路由器的请求失败，状态码：{status}",
+      "morph_communication_error": "与 MorphCloud 路由器通信时出错：{error}"
+    },
+    "i18n": {
+      "fillchar_length": "fillchar 必须且只能是一个字符"
+    }
+  },
+  "log": {
+    "model_parameters": "模型参数 {params}",
+    "script_parameters": "脚本参数 {params}",
+    "training_parameters": "训练参数 {params}",
+    "checkpoint_detected": "检测到检查点，正在从 {checkpoint} 恢复训练。",
+    "no_chat_template": "未提供对话模板，默认使用 ChatML。",
+    "model_saved": "模型已保存到 {output_dir}",
+    "pushing_to_hub": "正在推送到 Hub...",
+    "process_summary": "进程序号：{rank}，设备：{device}，GPU 数量：{n_gpu}，分布式训练：{distributed}，16 位训练：{fp16}",
+    "dataset": {
+      "loading": "正在加载数据集：{name}",
+      "mixture_creating": "正在创建包含 {count} 个数据集的混合数据集",
+      "mixture_loading": "正在为混合数据集加载数据集：{id}（配置：{config}）",
+      "subsampled": "已按权重 weight={weight} 对数据集 '{id}'（配置：{config}）抽样，保留 {count} 条样本",
+      "mixture_created": "已创建包含 {count} 条样本的混合数据集",
+      "split_done": "已按测试集比例 {test_size} 将数据集划分为训练集与测试集"
+    },
+    "hub": {
+      "repo_created": "已在 {url} 创建目标仓库",
+      "pushing_revision": "正在推送到 Hub 修订版本 {revision}...",
+      "pushed": "已成功推送到 {url} 的修订版本 {revision}！",
+      "reducing_gpus": "为使 num_heads 能被 num_gpus 整除，将 num_gpus 从 {before} 减少到 {after}",
+      "commit_message": "添加 {revision} 检查点"
+    },
+    "evaluation": {
+      "launching": "正在启动基准测试 `{benchmark}`"
+    },
+    "callbacks": {
+      "checkpoint_pushed": "检查点 {step} 已推送到 Hub。"
+    },
+    "piston": {
+      "subset_endpoints": "正在为 GPU#{gpu} 使用 Piston 端点子集"
+    },
+    "morph": {
+      "base_snapshot": "正在创建包含 build-essential、cmake 和 g++ 的基础快照"
+    },
+    "code_patcher": {
+      "original": "原始：",
+      "patched": "修补后："
+    }
+  },
+  "msg": {
+    "generate": {
+      "running_with_arguments": "正在使用以下参数运行：",
+      "loading_dataset": "正在加载 '{dataset}'（配置：{config}，分片：{split}）数据集...",
+      "dataset_loaded": "数据集加载完成！",
+      "running_pipeline": "正在运行生成流水线...",
+      "pipeline_finished": "生成流水线执行完毕！",
+      "pushing_dataset": "正在将结果数据集推送到 '{repo}'...",
+      "dataset_pushed": "数据集推送完成！"
+    },
+    "benchmarks": {
+      "supported_list": "支持的基准测试："
+    },
+    "decontaminate": {
+      "removed_samples": "从 '{benchmark}' 中移除了 {count} 条样本",
+      "size_summary": "初始条数：{initial}，最终条数：{final}",
+      "result_url": "去污后的数据集：{url}"
+    },
+    "upload_details": {
+      "dataset_url": "数据集地址：{url}"
+    },
+    "router": {
+      "morph_starting": "正在 {host}:{port} 上启动 MorphCloud 路由器"
+    },
+    "reasoning": {
+      "api_error": "API 错误（将重试）：{error}",
+      "processing_error": "处理样本时出错",
+      "processing_error_detail": "处理样本时出错：{error}",
+      "resuming": "发现 {count} 条已处理的样本，从该位置继续...",
+      "task_failed": "任务失败：{error}",
+      "progress_desc": "正在生成回复",
+      "progress_unit": "行"
+    },
+    "tensor_parallel": {
+      "config_failed": "警告：获取 {model}@{revision} 的配置失败：{error}"
+    },
+    "benchmark_e2b": {
+      "title": "## 基准测试结果",
+      "progress_desc": "正在对样本做基准测试",
+      "header_sample_size": "样本数",
+      "header_parallelization": "并行度",
+      "header_execution_time": "执行耗时（秒）",
+      "header_mean_reward": "平均奖励",
+      "header_min_reward": "最小奖励",
+      "header_max_reward": "最大奖励"
+    }
+  }
+}

@@ -179,3 +179,8 @@ results/
 
 .vscode/
 .python-version
+
+# Local development materials
+/.workbuddy-ai/
+/PROJECT.md
+/.ruff_cache/

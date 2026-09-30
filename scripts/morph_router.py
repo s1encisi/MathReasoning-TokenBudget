@@ -23,6 +23,9 @@ import uvicorn
 from dotenv import load_dotenv
 import os
 
+from open_r1.i18n import t
+from open_r1.i18n.argparse_help import make_parser
+
 load_dotenv()
 
 class BatchRequest(BaseModel):
@@ -153,15 +156,17 @@ def parse_args():
     Returns:
         argparse.Namespace: Parsed command-line arguments as an object.
     """
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--host", default="0.0.0.0")
-    parser.add_argument("--port", type=int, default=8001)
-    parser.add_argument("--max_num_sandboxes", type=int, default=20)
-    parser.add_argument("--api_key", default=os.getenv("MORPH_API_KEY"))
+    parser = make_parser()
+    parser.add_argument("--host", default="0.0.0.0", help=t("cli.morph_router.help.host"))
+    parser.add_argument("--port", type=int, default=8001, help=t("cli.morph_router.help.port"))
+    parser.add_argument(
+        "--max_num_sandboxes", type=int, default=20, help=t("cli.morph_router.help.max_num_sandboxes")
+    )
+    parser.add_argument("--api_key", default=os.getenv("MORPH_API_KEY"), help=t("cli.morph_router.help.api_key"))
     args = parser.parse_args()
-    
+
     if not args.api_key:
-        raise ValueError("MorphCloud API key not provided. Please set MORPH_API_KEY environment variable or use --api_key.")
+        raise ValueError(t("error.router.morph_api_key_missing"))
     
     return args
 
@@ -169,5 +174,5 @@ if __name__ == "__main__":
     args = parse_args()
     app = create_app(args)
     
-    print(f"Starting MorphCloud Router on {args.host}:{args.port}")
+    print(t("msg.router.morph_starting", host=args.host, port=args.port))
     uvicorn.run(app, host=args.host, port=args.port)

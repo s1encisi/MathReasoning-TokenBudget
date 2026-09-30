@@ -8,6 +8,8 @@ from functools import lru_cache
 
 import aiohttp
 
+from ...i18n import t
+
 
 class PistonError(Exception):
     pass
@@ -17,16 +19,14 @@ class PistonError(Exception):
 def get_piston_client_from_env(session=None):
     piston_endpoints = os.getenv("PISTON_ENDPOINTS")
     if piston_endpoints is None:
-        raise ValueError(
-            "For IOI/CF problems Piston endpoints running our IOI package are required. Please add a list of valid Piston endpoints to a PISTON_ENDPOINTS variable in a `.env` file."
-        )
+        raise ValueError(t("error.piston.endpoints_required"))
     piston_endpoints = sorted(
         piston_endpoints.split(",") if piston_endpoints != "slurm" else get_slurm_piston_endpoints()
     )
     gpu_nb = int(os.getenv("LOCAL_RANK", 0))  # per‑GPU index
     world = int(os.getenv("WORLD_SIZE", 1))  # total GPUs
     if world > 1:
-        print(f"Using a subset of piston endpoints for GPU#{gpu_nb}")
+        print(t("log.piston.subset_endpoints", gpu=gpu_nb))
         piston_endpoints = piston_endpoints[gpu_nb::world]
     random.shuffle(piston_endpoints)
     max_requests_per_endpoint = os.getenv("PISTON_MAX_REQUESTS_PER_ENDPOINT", "1")
@@ -65,7 +65,7 @@ class PistonClient:
         self.max_requests_per_endpoint = max_requests_per_endpoint
         self.base_endpoints = [base_endpoint] if isinstance(base_endpoint, str) else base_endpoint
         if len(self.base_endpoints) == 0:
-            raise ValueError("No Piston endpoints provided. Please check your PISTON_ENDPOINTS environment variable.")
+            raise ValueError(t("error.piston.no_endpoints"))
         self.endpoint_ids = {endpoint: i for i, endpoint in enumerate(self.base_endpoints)}
 
         self._session = session
@@ -129,7 +129,7 @@ class PistonClient:
                 await asyncio.sleep(5)
                 await self.get_supported_runtimes()
             except Exception as e:
-                print(f"Error checking endpoint {endpoint}, dropping it ({e})")
+                print(t("error.piston.endpoint_failed", endpoint=endpoint, error=e))
                 self._unhealthy_endpoints.add(endpoint)
                 if len(self._unhealthy_endpoints) >= len(self.base_endpoints):
                     raise PistonError("All endpoints are unhealthy. Please check your Piston workers.")
@@ -172,7 +172,15 @@ class PistonClient:
                     delay = min(base_delay * (2**attempt), 10)  # Exponential backoff, capped at 10 seconds
                     jitter = delay * 0.2 * (2 * asyncio.get_event_loop().time() % 1 - 0.5)  # Add ±10% jitter
                     retry_delay = delay + jitter
-                    print(f"Retrying in {retry_delay:.2f} seconds [{self.endpoint_ids[endpoint]}] {endpoint} - {e}")
+                    print(
+                        t(
+                            "error.piston.retrying",
+                            delay=retry_delay,
+                            endpoint_id=self.endpoint_ids[endpoint],
+                            endpoint=endpoint,
+                            error=e,
+                        )
+                    )
 
                     # special case: worker died
                     if isinstance(e, aiohttp.ClientConnectionError) and "Connect call failed" in str(e):
@@ -186,7 +194,7 @@ class PistonClient:
                 else:
                     await self._check_failed_endpoint(endpoint)
             except Exception as e:
-                print(f"Propagating exception {type(e)}: {e}")
+                print(t("error.piston.propagating", type=type(e), error=e))
                 raise e
             finally:
                 # Ensure endpoint is always released, even if an exception occurs
@@ -194,7 +202,7 @@ class PistonClient:
                     try:
                         await self._release_endpoint(endpoint)
                     except Exception as e:
-                        print(f"Error releasing endpoint {endpoint}: {e}")
+                        print(t("error.piston.release_failed", endpoint=endpoint, error=e))
                     endpoint = None
 
 

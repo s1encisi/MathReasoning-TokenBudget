@@ -22,6 +22,7 @@ from transformers import set_seed
 from transformers.trainer_utils import get_last_checkpoint
 
 from open_r1.configs import GRPOConfig, GRPOScriptArguments
+from open_r1.i18n import t
 from open_r1.rewards import get_reward_funcs
 from open_r1.utils import get_dataset, get_model, get_tokenizer
 from open_r1.utils.callbacks import get_callbacks
@@ -53,19 +54,25 @@ def main(script_args, training_args, model_args):
 
     # Log on each process a small summary
     logger.warning(
-        f"Process rank: {training_args.local_rank}, device: {training_args.device}, n_gpu: {training_args.n_gpu}"
-        + f" distributed training: {bool(training_args.local_rank != -1)}, 16-bits training: {training_args.fp16}"
+        t(
+            "log.process_summary",
+            rank=training_args.local_rank,
+            device=training_args.device,
+            n_gpu=training_args.n_gpu,
+            distributed=bool(training_args.local_rank != -1),
+            fp16=training_args.fp16,
+        )
     )
-    logger.info(f"Model parameters {model_args}")
-    logger.info(f"Script parameters {script_args}")
-    logger.info(f"Training parameters {training_args}")
+    logger.info(t("log.model_parameters", params=model_args))
+    logger.info(t("log.script_parameters", params=script_args))
+    logger.info(t("log.training_parameters", params=training_args))
 
     # Check for last checkpoint
     last_checkpoint = None
     if os.path.isdir(training_args.output_dir):
         last_checkpoint = get_last_checkpoint(training_args.output_dir)
     if last_checkpoint is not None and training_args.resume_from_checkpoint is None:
-        logger.info(f"Checkpoint detected, resuming training at {last_checkpoint=}.")
+        logger.info(t("log.checkpoint_detected", checkpoint=last_checkpoint))
 
     if "wandb" in training_args.report_to:
         init_wandb_training(training_args)
@@ -95,7 +102,7 @@ def main(script_args, training_args, model_args):
             prompt.append({"role": "system", "content": training_args.system_prompt})
 
         if prompt_column not in example:
-            raise ValueError(f"Dataset Question Field Error: {prompt_column} is not supported.")
+            raise ValueError(t("error.grpo.prompt_column_unsupported", column=prompt_column))
 
         prompt.append({"role": "user", "content": example[prompt_column]})
         return {"prompt": prompt}
@@ -144,7 +151,7 @@ def main(script_args, training_args, model_args):
     # to avoid unbounded generation in the transformers `pipeline()` function
     trainer.model.generation_config.eos_token_id = tokenizer.eos_token_id
     trainer.save_model(training_args.output_dir)
-    logger.info(f"Model saved to {training_args.output_dir}")
+    logger.info(t("log.model_saved", output_dir=training_args.output_dir))
 
     # Save everything else on main process
     kwargs = {
@@ -171,7 +178,7 @@ def main(script_args, training_args, model_args):
     # push to hub
     #############
     if training_args.push_to_hub:
-        logger.info("Pushing to hub...")
+        logger.info(t("log.pushing_to_hub"))
         trainer.push_to_hub(**kwargs)
 
 

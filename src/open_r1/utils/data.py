@@ -4,6 +4,7 @@ import datasets
 from datasets import DatasetDict, concatenate_datasets
 
 from ..configs import ScriptArguments
+from ..i18n import t
 
 
 logger = logging.getLogger(__name__)
@@ -19,15 +20,15 @@ def get_dataset(args: ScriptArguments) -> DatasetDict:
         DatasetDict: The loaded datasets.
     """
     if args.dataset_name and not args.dataset_mixture:
-        logger.info(f"Loading dataset: {args.dataset_name}")
+        logger.info(t("log.dataset.loading", name=args.dataset_name))
         return datasets.load_dataset(args.dataset_name, args.dataset_config)
     elif args.dataset_mixture:
-        logger.info(f"Creating dataset mixture with {len(args.dataset_mixture.datasets)} datasets")
+        logger.info(t("log.dataset.mixture_creating", count=len(args.dataset_mixture.datasets)))
         seed = args.dataset_mixture.seed
         datasets_list = []
 
         for dataset_config in args.dataset_mixture.datasets:
-            logger.info(f"Loading dataset for mixture: {dataset_config.id} (config: {dataset_config.config})")
+            logger.info(t("log.dataset.mixture_loading", id=dataset_config.id, config=dataset_config.config))
             ds = datasets.load_dataset(
                 dataset_config.id,
                 dataset_config.config,
@@ -38,7 +39,13 @@ def get_dataset(args: ScriptArguments) -> DatasetDict:
             if dataset_config.weight is not None:
                 ds = ds.shuffle(seed=seed).select(range(int(len(ds) * dataset_config.weight)))
                 logger.info(
-                    f"Subsampled dataset '{dataset_config.id}' (config: {dataset_config.config}) with weight={dataset_config.weight} to {len(ds)} examples"
+                    t(
+                        "log.dataset.subsampled",
+                        id=dataset_config.id,
+                        config=dataset_config.config,
+                        weight=dataset_config.weight,
+                        count=len(ds),
+                    )
                 )
 
             datasets_list.append(ds)
@@ -46,20 +53,18 @@ def get_dataset(args: ScriptArguments) -> DatasetDict:
         if datasets_list:
             combined_dataset = concatenate_datasets(datasets_list)
             combined_dataset = combined_dataset.shuffle(seed=seed)
-            logger.info(f"Created dataset mixture with {len(combined_dataset)} examples")
+            logger.info(t("log.dataset.mixture_created", count=len(combined_dataset)))
 
             if args.dataset_mixture.test_split_size is not None:
                 combined_dataset = combined_dataset.train_test_split(
                     test_size=args.dataset_mixture.test_split_size, seed=seed
                 )
-                logger.info(
-                    f"Split dataset into train and test sets with test size: {args.dataset_mixture.test_split_size}"
-                )
+                logger.info(t("log.dataset.split_done", test_size=args.dataset_mixture.test_split_size))
                 return combined_dataset
             else:
                 return DatasetDict({"train": combined_dataset})
         else:
-            raise ValueError("No datasets were loaded from the mixture configuration")
+            raise ValueError(t("error.data.no_datasets_loaded"))
 
     else:
-        raise ValueError("Either `dataset_name` or `dataset_mixture` must be provided")
+        raise ValueError(t("error.data.dataset_source_required"))

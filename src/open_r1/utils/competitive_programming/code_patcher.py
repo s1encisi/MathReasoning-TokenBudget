@@ -1,5 +1,7 @@
 import re
 
+from ...i18n import t
+
 
 def fix_python3_imports(source_code):
     """
@@ -118,6 +120,6 @@ print('%d/%d'%(num//div,denom//div))""",
 
 if __name__ == "__main__":
     for test in tests:
-        print("ORIGINAL:", test, sep="\n\n")
-        print("PATCHED:", patch_code(test, "Python 3"), sep="\n\n")
+        print(t("log.code_patcher.original"), test, sep="\n\n")
+        print(t("log.code_patcher.patched"), patch_code(test, "Python 3"), sep="\n\n")
         print("=" * 50)

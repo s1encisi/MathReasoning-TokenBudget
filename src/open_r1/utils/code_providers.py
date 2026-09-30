@@ -19,6 +19,7 @@ import abc
 import asyncio
 from typing import List, Optional
 
+from ..i18n import t
 from ..utils import is_e2b_available, is_morph_available
 
 
@@ -107,7 +108,7 @@ class E2BProvider(CodeExecutionProvider):
         try:
             rewards = self._run_async_from_sync(scripts, languages, self.num_parallel)
         except Exception as e:
-            print(f"Error from E2B executor: {e}")
+            print(t("error.code_providers.e2b_executor", error=e))
             rewards = [0.0] * len(scripts)
 
         return rewards
@@ -117,7 +118,7 @@ class E2BProvider(CodeExecutionProvider):
         try:
             rewards = asyncio.run(self._run_async(scripts, languages, num_parallel))
         except Exception as e:
-            print(f"Error from E2B executor async: {e}")
+            print(t("error.code_providers.e2b_executor_async", error=e))
             raise e
 
         return rewards
@@ -154,16 +155,16 @@ class E2BProvider(CodeExecutionProvider):
             except (TypeError, ValueError):
                 return 0.0
             except asyncio.TimeoutError:
-                print("Operation timed out")
+                print(t("error.code_providers.operation_timed_out"))
                 return 0.0
             except Exception as e:
-                print(f"Error in `_run_script` from E2B sandbox ID {sandbox.sandbox_id} : {e}")
+                print(t("error.code_providers.e2b_script", sandbox_id=sandbox.sandbox_id, error=e))
                 return 0.0
             finally:
                 try:
                     await sandbox.kill()
                 except Exception as e:
-                    print(f"Error from E2B executor kill with sandbox ID {sandbox.sandbox_id} : {e}")
+                    print(t("error.code_providers.e2b_kill", sandbox_id=sandbox.sandbox_id, error=e))
 
 
 class MorphProvider(CodeExecutionProvider):
@@ -177,17 +178,14 @@ class MorphProvider(CodeExecutionProvider):
             morph_router_url: URL for the MorphCloud router (if using router mode)
         """
         if not is_morph_available():
-            raise ImportError(
-                "MorphCloud is not available and required for this provider. Please install MorphCloud with "
-                "`pip install morphcloud` and add an API key to a `.env` file."
-            )
+            raise ImportError(t("error.code_providers.morph_import_missing"))
 
         try:
             from dotenv import load_dotenv
 
             load_dotenv()
         except ImportError:
-            print("Warning: python-dotenv not installed. Environment variables must be set directly.")
+            print(t("error.code_providers.dotenv_missing"))
 
         self.num_parallel = num_parallel
         self.morph_router_url = morph_router_url
@@ -200,13 +198,13 @@ class MorphProvider(CodeExecutionProvider):
 
         self.api_key = os.getenv("MORPH_API_KEY")
         if not self.api_key:
-            raise ValueError("MorphCloud API key not found. Please set the MORPH_API_KEY environment variable.")
+            raise ValueError(t("error.code_providers.morph_api_key_missing"))
 
         try:
             self.client = MorphCloudClient(api_key=self.api_key)
             self.Sandbox = Sandbox
         except ImportError as e:
-            raise ImportError(f"Required MorphCloud dependencies not installed: {e}")
+            raise ImportError(t("error.code_providers.morph_deps_missing", error=e))
 
     def execute_scripts(self, scripts: List[str], languages: List[str]) -> List[float]:
         """Execute scripts using MorphCloud Sandbox API.
@@ -237,7 +235,7 @@ class MorphProvider(CodeExecutionProvider):
                         rewards.append(0.0)
                 return rewards
             except Exception as e:
-                print(f"Error from MorphCloud router: {e}")
+                print(t("error.code_providers.morph_router", error=e))
                 return [0.0] * len(scripts)
 
         import asyncio
@@ -245,7 +243,7 @@ class MorphProvider(CodeExecutionProvider):
         try:
             rewards = asyncio.run(self._run_async(scripts, languages, self.num_parallel))
         except Exception as e:
-            print(f"Error from MorphCloud executor: {e}")
+            print(t("error.code_providers.morph_executor", error=e))
             rewards = [0.0] * len(scripts)
 
         return rewards
@@ -363,4 +361,4 @@ def get_provider(provider_type: str = "e2b", **kwargs) -> CodeExecutionProvider:
             morph_router_url=morph_router_url,
         )
     else:
-        raise ValueError(f"Unknown provider type: {provider_type}")
+        raise ValueError(t("error.code_providers.unknown_provider", provider_type=provider_type))

@@ -14,6 +14,8 @@ import aiofiles
 import aiohttp
 import uvloop
 
+from open_r1.i18n import t
+
 
 file_lock = Lock()
 
@@ -36,7 +38,7 @@ async def generate_completion(session, prompt, args):
             ) as response:
                 return await response.json(content_type=None)
         except Exception as e:
-            print(f"API error (will retry): {e}")
+            print(t("msg.reasoning.api_error", error=e))
             retry_budget -= 1
             await asyncio.sleep(10)
     return None
@@ -51,7 +53,7 @@ async def process_example(example, session, args, output_file, pbar):
         completions = await asyncio.gather(*tasks)
 
         if any(completion is None for completion in completions):
-            print(f"Error processing example")
+            print(t("msg.reasoning.processing_error"))
             pbar.update(1)
             return None
 
@@ -83,7 +85,7 @@ async def process_example(example, session, args, output_file, pbar):
 
         return result
     except Exception as e:
-        print(f"Error processing example: {e}")
+        print(t("msg.reasoning.processing_error_detail", error=e))
         pbar.update(1)
         return None
 
@@ -102,28 +104,33 @@ async def load_processed_uuids(output_file, uuid_column):
 
 
 async def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--dataset-name", type=str, required=True)
-    parser.add_argument("--output-file", type=str, required=True)
-    parser.add_argument("--prompt-column", type=str, required=True)
-    parser.add_argument("--uuid-column", type=str, required=True)
-    parser.add_argument("--api-addr", type=str, default="localhost:39876")
-    parser.add_argument("--num-generations", type=int, default=4)
+    from open_r1.i18n.argparse_help import make_parser
+
+    parser = make_parser()
+    parser.add_argument("--dataset-name", type=str, required=True, help=t("cli.reasoning.help.dataset_name"))
+    parser.add_argument("--output-file", type=str, required=True, help=t("cli.reasoning.help.output_file"))
+    parser.add_argument("--prompt-column", type=str, required=True, help=t("cli.reasoning.help.prompt_column"))
+    parser.add_argument("--uuid-column", type=str, required=True, help=t("cli.reasoning.help.uuid_column"))
+    parser.add_argument("--api-addr", type=str, default="localhost:39876", help=t("cli.reasoning.help.api_addr"))
+    parser.add_argument(
+        "--num-generations", type=int, default=4, help=t("cli.reasoning.help.num_generations")
+    )
     parser.add_argument(
         "--prompt-template",
         type=str,
         default="You will be given a problem. Please reason step by step, and put your final answer within \\boxed{{}}:\n{prompt}",
+        help=t("cli.reasoning.help.prompt_template"),
     )
-    parser.add_argument("--temperature", type=float, default=0.6)
-    parser.add_argument("--top-p", type=float, default=0.95)
-    parser.add_argument("--max-tokens", type=int, default=16384)
-    parser.add_argument("--max-concurrent", type=int, default=1000)
+    parser.add_argument("--temperature", type=float, default=0.6, help=t("cli.reasoning.help.temperature"))
+    parser.add_argument("--top-p", type=float, default=0.95, help=t("cli.reasoning.help.top_p"))
+    parser.add_argument("--max-tokens", type=int, default=16384, help=t("cli.reasoning.help.max_tokens"))
+    parser.add_argument("--max-concurrent", type=int, default=1000, help=t("cli.reasoning.help.max_concurrent"))
     args = parser.parse_args()
 
     dataset = load_dataset(args.dataset_name, split="train").shuffle()
     processed_uuids = await load_processed_uuids(args.output_file, args.uuid_column)
     if processed_uuids:
-        print(f"Found {len(processed_uuids)} already processed examples, resuming from there...")
+        print(t("msg.reasoning.resuming", count=len(processed_uuids)))
 
     if not os.path.exists(args.output_file):
         async with aiofiles.open(args.output_file, mode="w") as f:
@@ -133,8 +140,8 @@ async def main():
 
     pbar = tqdm(
         total=len(dataset) - len(processed_uuids),
-        desc="Generating responses",
-        unit="row",
+        desc=t("msg.reasoning.progress_desc"),
+        unit=t("msg.reasoning.progress_unit"),
         mininterval=2,
         smoothing=0.0001,
     )
@@ -154,7 +161,7 @@ async def main():
                         try:
                             await task
                         except Exception as e:
-                            print(f"Task failed: {e}")
+                            print(t("msg.reasoning.task_failed", error=e))
 
                 task = asyncio.create_task(process_example(example, session, args, args.output_file, pbar))
                 active_tasks.add(task)

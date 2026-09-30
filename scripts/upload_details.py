@@ -29,6 +29,8 @@ from typing import List
 from datasets import load_dataset
 from transformers import HfArgumentParser
 
+from open_r1.i18n import t
+
 
 @dataclass
 class ScriptArguments:
@@ -48,7 +50,7 @@ def main():
     else:
         ds = load_dataset("parquet", data_files=args.data_files)
     url = ds.push_to_hub(args.hub_repo_id, config_name=args.config_name, private=True)
-    print(f"Dataset available at: {url}")
+    print(t("msg.upload_details.dataset_url", url=url))
 
 
 if __name__ == "__main__":

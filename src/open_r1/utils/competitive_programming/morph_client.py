@@ -6,6 +6,7 @@ import tempfile
 from typing import Any, Dict, Optional, Tuple
 
 from dotenv import load_dotenv
+from open_r1.i18n import t
 from open_r1.utils.import_utils import is_morph_available
 
 
@@ -71,7 +72,7 @@ class MorphCloudExecutionClient:
             await instance.await_until_ready(timeout=300)
             return instance
         except asyncio.TimeoutError as e:
-            print(f"Timeout while preparing instance: {str(e)}")
+            print(t("error.morph.instance_timeout", error=str(e)))
             if instance:
                 try:
                     await instance.astop()
@@ -106,7 +107,7 @@ class MorphCloudExecutionClient:
                 graders_files.append(file)
 
         if not problem_id:
-            raise ValueError("Could not determine problem ID from files")
+            raise ValueError(t("error.morph.problem_id_unknown"))
 
         grader_config = {
             "task_type": "Batch",
@@ -179,7 +180,13 @@ class MorphCloudExecutionClient:
         compile_result = await instance.aexec("cd /workspace && ./compile")
 
         if compile_result.exit_code != 0:
-            raise RuntimeError(f"Compilation error exit code {compile_result.exit_code}\n{compile_result.stderr}")
+            # NOTE: 该消息会被上层（`_execute` 的 `except RuntimeError -> return "0", str(e)`）
+            # 原样作为 feedback 返回，并由 `ioi_scoring._extract_single_status()` 用
+            # `"Compilation error" in feedback` 判定状态位 'CE'。此处必须保留英文关键字，
+            # 中文化会静默把状态从 CE 变成 RE，属于行为变更。
+            raise RuntimeError(
+                f"Compilation error exit code {compile_result.exit_code}\n{compile_result.stderr}"
+            )
 
         return compile_result
 
@@ -317,9 +324,9 @@ class MorphCloudExecutionClient:
 
             except asyncio.TimeoutError:
                 if attempt < max_retries:
-                    print(f"Execution timed out, retrying ({attempt + 1}/{max_retries})")
+                    print(t("error.morph.exec_timeout_retry", attempt=attempt + 1, max_retries=max_retries))
                 else:
-                    return "0", "Execution timed out after multiple retries"
+                    return "0", t("error.morph.exec_timeout_exhausted")
 
             except Exception as e:
                 # Calculate exponential backoff
@@ -327,12 +334,19 @@ class MorphCloudExecutionClient:
                     retry_delay = min(base_delay * (2**attempt), 30)  # Exponential backoff, capped at 30 seconds
 
                     print(
-                        f"Execution failed with {type(e).__name__}: {str(e)}, retrying in {retry_delay:.2f}s ({attempt + 1}/{max_retries})"
+                        t(
+                            "error.morph.exec_failed_retry",
+                            type=type(e).__name__,
+                            error=str(e),
+                            delay=retry_delay,
+                            attempt=attempt + 1,
+                            max_retries=max_retries,
+                        )
                     )
                     await asyncio.sleep(retry_delay)
                 else:
-                    print(f"Execution failed after {max_retries} retries: {type(e).__name__}: {str(e)}")
-                    return "0", f"Execution failed after multiple retries: {str(e)}"
+                    print(t("error.morph.exec_failed", max_retries=max_retries, type=type(e).__name__, error=str(e)))
+                    return "0", t("error.morph.exec_failed_multiple", error=str(e))
 
     async def _get_or_create_base_snapshot(self):
         """Get or create a snapshot with the necessary dependencies and scripts for evaluation."""
@@ -341,7 +355,7 @@ class MorphCloudExecutionClient:
             base_snapshots = await self.client.snapshots.alist(digest="ioi-evaluation-morph")
 
             if not base_snapshots:
-                print("Creating base snapshot with build-essential cmake and g++")
+                print(t("log.morph.base_snapshot"))
 
                 # Create base snapshot with minimal specs
                 base_snapshot = await self.client.snapshots.acreate(
@@ -734,7 +748,7 @@ def get_morph_client_from_env(session=None) -> MorphCloudExecutionClient:
     load_dotenv()
     api_key = os.environ.get("MORPH_API_KEY")
     if not api_key:
-        raise ValueError("MORPH_API_KEY environment variable is required")
+        raise ValueError(t("error.morph.api_key_required"))
 
     return MorphCloudExecutionClient(api_key=api_key)
 

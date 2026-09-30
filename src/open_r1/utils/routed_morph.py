@@ -17,6 +17,8 @@ from typing import List, Optional
 
 import requests
 
+from ..i18n import t
+
 
 class RoutedMorphSandbox:
     """
@@ -84,7 +86,7 @@ class RoutedMorphSandbox:
             response = requests.post(endpoint, json=payload, timeout=actual_request_timeout)
 
             if response.status_code != 200:
-                error = f"Request to MorphCloud router failed with status code: {response.status_code}"
+                error = t("error.sandbox.morph_request_failed", status=response.status_code)
                 print(error)
 
                 results = []
@@ -111,7 +113,7 @@ class RoutedMorphSandbox:
             return results
 
         except Exception as e:
-            error = f"Error communicating with MorphCloud router: {str(e)}"
+            error = t("error.sandbox.morph_communication_error", error=str(e))
             print(error)
 
             results = []

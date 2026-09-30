@@ -26,6 +26,7 @@ from datasets import load_dataset
 from transformers import set_seed
 
 from open_r1.configs import GRPOConfig, GRPOScriptArguments
+from open_r1.i18n import t
 from open_r1.rewards import get_reward_funcs
 from open_r1.utils import get_tokenizer
 from trl import ModelConfig, TrlParser
@@ -64,9 +65,9 @@ def main(script_args, training_args, model_args):
     transformers.utils.logging.enable_default_handler()
     transformers.utils.logging.enable_explicit_format()
 
-    logger.info(f"Model parameters {model_args}")
-    logger.info(f"Script parameters {script_args}")
-    logger.info(f"Training parameters {training_args}")
+    logger.info(t("log.model_parameters", params=model_args))
+    logger.info(t("log.script_parameters", params=script_args))
+    logger.info(t("log.training_parameters", params=training_args))
 
     # Load the dataset
     dataset = load_dataset(script_args.dataset_name, name=script_args.dataset_config, split=script_args.dataset_split)
@@ -86,7 +87,7 @@ def main(script_args, training_args, model_args):
             prompt.append({"role": "system", "content": training_args.system_prompt})
 
         if prompt_column not in example:
-            raise ValueError(f"Dataset Question Field Error: {prompt_column} is not supported.")
+            raise ValueError(t("error.pass_rate.prompt_column_unsupported", column=prompt_column))
 
         prompt.append({"role": "user", "content": example[prompt_column]})
         return {"prompt": prompt}

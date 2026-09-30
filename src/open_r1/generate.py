@@ -18,6 +18,7 @@ from distilabel.llms import OpenAILLM
 from distilabel.pipeline import Pipeline
 from distilabel.steps import StepResources
 from distilabel.steps.tasks import TextGeneration
+from open_r1.i18n import t
 
 
 def build_distilabel_pipeline(
@@ -64,120 +65,128 @@ def build_distilabel_pipeline(
 
 
 if __name__ == "__main__":
-    import argparse
-
     from datasets import load_dataset
 
-    parser = argparse.ArgumentParser(description="Run distilabel pipeline for generating responses with DeepSeek R1")
+    from open_r1.i18n.argparse_help import make_parser
+
+    parser = make_parser(description=t("cli.generate.description"))
     parser.add_argument(
         "--hf-dataset",
         type=str,
         required=True,
-        help="HuggingFace dataset to load",
+        help=t("cli.generate.help.hf_dataset"),
     )
     parser.add_argument(
         "--hf-dataset-config",
         type=str,
         required=False,
-        help="Dataset config to use",
+        help=t("cli.generate.help.hf_dataset_config"),
     )
     parser.add_argument(
         "--hf-dataset-split",
         type=str,
         default="train",
-        help="Dataset split to use",
+        help=t("cli.generate.help.hf_dataset_split"),
     )
     parser.add_argument(
         "--prompt-column",
         type=str,
         default="prompt",
+        help=t("cli.generate.help.prompt_column"),
     )
     parser.add_argument(
         "--prompt-template",
         type=str,
         default="{{ instruction }}",
-        help="Template string for formatting prompts.",
+        help=t("cli.generate.help.prompt_template"),
     )
     parser.add_argument(
         "--model",
         type=str,
         required=True,
-        help="Model name to use for generation",
+        help=t("cli.generate.help.model"),
     )
     parser.add_argument(
         "--vllm-server-url",
         type=str,
         default="http://localhost:8000/v1",
-        help="URL of the vLLM server",
+        help=t("cli.generate.help.vllm_server_url"),
     )
     parser.add_argument(
         "--temperature",
         type=float,
-        help="Temperature for generation",
+        help=t("cli.generate.help.temperature"),
     )
     parser.add_argument(
         "--top-p",
         type=float,
-        help="Top-p value for generation",
+        help=t("cli.generate.help.top_p"),
     )
     parser.add_argument(
         "--max-new-tokens",
         type=int,
         default=8192,
-        help="Maximum number of new tokens to generate",
+        help=t("cli.generate.help.max_new_tokens"),
     )
     parser.add_argument(
         "--num-generations",
         type=int,
         default=1,
-        help="Number of generations per problem",
+        help=t("cli.generate.help.num_generations"),
     )
     parser.add_argument(
         "--input-batch-size",
         type=int,
         default=64,
-        help="Batch size for input processing",
+        help=t("cli.generate.help.input_batch_size"),
     )
     parser.add_argument(
         "--client-replicas",
         type=int,
         default=1,
-        help="Number of client replicas for parallel processing",
+        help=t("cli.generate.help.client_replicas"),
     )
     parser.add_argument(
         "--timeout",
         type=int,
         default=600,
-        help="Request timeout in seconds (default: 600)",
+        help=t("cli.generate.help.timeout"),
     )
     parser.add_argument(
         "--retries",
         type=int,
         default=0,
-        help="Number of retries for failed requests (default: 0)",
+        help=t("cli.generate.help.retries"),
     )
     parser.add_argument(
         "--hf-output-dataset",
         type=str,
         required=False,
-        help="HuggingFace repo to push results to",
+        help=t("cli.generate.help.hf_output_dataset"),
     )
     parser.add_argument(
         "--private",
         action="store_true",
-        help="Whether to make the output dataset private when pushing to HF Hub",
+        help=t("cli.generate.help.private"),
     )
 
     args = parser.parse_args()
 
-    print("\nRunning with arguments:")
+    print(f"\n{t('msg.generate.running_with_arguments')}")
     for arg, value in vars(args).items():
         print(f"  {arg}: {value}")
     print()
 
-    print(f"Loading '{args.hf_dataset}' (config: {args.hf_dataset_config}, split: {args.hf_dataset_split}) dataset...")
+    print(
+        t(
+            "msg.generate.loading_dataset",
+            dataset=args.hf_dataset,
+            config=args.hf_dataset_config,
+            split=args.hf_dataset_split,
+        )
+    )
     dataset = load_dataset(args.hf_dataset, args.hf_dataset_config, split=args.hf_dataset_split)
-    print("Dataset loaded!")
+    print(t("msg.generate.dataset_loaded"))
 
     pipeline = build_distilabel_pipeline(
         model=args.model,
@@ -194,15 +203,15 @@ if __name__ == "__main__":
         retries=args.retries,
     )
 
-    print("Running generation pipeline...")
+    print(t("msg.generate.running_pipeline"))
     distiset = pipeline.run(
         dataset=dataset,
         dataset_batch_size=args.input_batch_size * 1000,
         use_cache=False,
     )
-    print("Generation pipeline finished!")
+    print(t("msg.generate.pipeline_finished"))
 
     if args.hf_output_dataset:
-        print(f"Pushing resulting dataset to '{args.hf_output_dataset}'...")
+        print(t("msg.generate.pushing_dataset", repo=args.hf_output_dataset))
         distiset.push_to_hub(args.hf_output_dataset, private=args.private)
-        print("Dataset pushed!")
+        print(t("msg.generate.dataset_pushed"))

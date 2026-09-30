@@ -32,6 +32,8 @@ from huggingface_hub import (
 )
 from trl import GRPOConfig, SFTConfig
 
+from ..i18n import t
+
 
 logger = logging.getLogger(__name__)
 
@@ -50,19 +52,21 @@ def push_to_hub_revision(training_args: SFTConfig | GRPOConfig, extra_ignore_pat
         revision=initial_commit.commit_id,
         exist_ok=True,
     )
-    logger.info(f"Created target repo at {repo_url}")
-    logger.info(f"Pushing to the Hub revision {training_args.hub_model_revision}...")
+    logger.info(t("log.hub.repo_created", url=repo_url))
+    logger.info(t("log.hub.pushing_revision", revision=training_args.hub_model_revision))
     ignore_patterns = ["checkpoint-*", "*.pth"]
     ignore_patterns.extend(extra_ignore_patterns)
     future = upload_folder(
         repo_id=training_args.hub_model_id,
         folder_path=training_args.output_dir,
         revision=training_args.hub_model_revision,
-        commit_message=f"Add {training_args.hub_model_revision} checkpoint",
+        commit_message=t("log.hub.commit_message", revision=training_args.hub_model_revision),
         ignore_patterns=ignore_patterns,
         run_as_future=True,
     )
-    logger.info(f"Pushed to {repo_url} revision {training_args.hub_model_revision} successfully!")
+    logger.info(
+        t("log.hub.pushed", url=repo_url, revision=training_args.hub_model_revision)
+    )
 
     return future
 
@@ -80,10 +84,7 @@ def check_hub_revision_exists(training_args: SFTConfig | GRPOConfig):
                     revision=training_args.hub_model_revision,
                 )
                 if "README.md" in repo_files and training_args.overwrite_hub_revision is False:
-                    raise ValueError(
-                        f"Revision {training_args.hub_model_revision} already exists. "
-                        "Use --overwrite_hub_revision to overwrite it."
-                    )
+                    raise ValueError(t("error.hub.revision_exists", revision=training_args.hub_model_revision))
 
 
 def get_param_count_from_repo_id(repo_id: str) -> int:
@@ -127,6 +128,6 @@ def get_gpu_count_for_vllm(model_name: str, revision: str = "main", num_gpus: in
     num_heads = config.num_attention_heads
     # Reduce num_gpus so that num_heads is divisible by num_gpus and 64 is divisible by num_gpus
     while num_heads % num_gpus != 0 or 64 % num_gpus != 0:
-        logger.info(f"Reducing num_gpus from {num_gpus} to {num_gpus - 1} to make num_heads divisible by num_gpus")
+        logger.info(t("log.hub.reducing_gpus", before=num_gpus, after=num_gpus - 1))
         num_gpus -= 1
     return num_gpus

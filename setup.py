@@ -132,6 +132,9 @@ setup(
     url="https://github.com/huggingface/open-r1",
     package_dir={"": "src"},
     packages=find_packages("src"),
+    # 语言资源文件必须随包分发，否则运行期找不到 zh_CN.json
+    package_data={"open_r1": ["i18n/locales/*.json"]},
+    include_package_data=True,
     zip_safe=False,
     extras_require=extras,
     python_requires=">=3.10.9",

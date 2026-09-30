@@ -18,6 +18,8 @@ from typing import List, Optional
 import requests
 from e2b_code_interpreter.models import Execution, ExecutionError, Result
 
+from ..i18n import t
+
 
 class RoutedSandbox:
     """
@@ -78,7 +80,7 @@ class RoutedSandbox:
         # Send the request to the E2B Router
         response = requests.post(f"http://{self.router_url}/execute_batch", json=payload)
         if not response.ok:
-            print(f"Request failed with status code: {response.status_code}")
+            print(t("error.sandbox.request_failed", status=response.status_code))
 
         # Parse the response and construct Execution objects
         results = response.json()

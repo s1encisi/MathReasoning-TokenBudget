@@ -5,6 +5,7 @@ from typing import Literal
 
 from async_lru import alru_cache
 
+from ...i18n import t
 from .piston_client import PistonClient
 from .utils import batched
 
@@ -18,7 +19,7 @@ async def score_single_test_case(
     submission_language: str = "cpp",
 ) -> tuple[str, str]:
     if submission_language not in ["python", "cpp"]:
-        raise ValueError(f"Invalid submission language: {submission_language}")
+        raise ValueError(t("error.cf.invalid_language", language=submission_language))
     try:
         result = await client.send_execute(
             {
@@ -49,7 +50,7 @@ async def score_single_test_case(
             language="cf_python3" if submission_language == "python" else "c++17",
         )
     except Exception as e:
-        print(f"Error scoring submission: {e}")
+        print(t("error.cf.scoring_failed", error=e))
         return False
 
     return result
@@ -64,13 +65,9 @@ async def get_generated_contest_tests(contest_id: str) -> list[dict]:
 
     tests_folder = os.environ.get("CF_TESTS_FOLDER", None)
     if not tests_folder:
-        raise ValueError(
-            "CF_TESTS_FOLDER environment variable not set! Please download the codeforces generated tests and set CF_TESTS_FOLDER to the folder path. See https://huggingface.co/datasets/open-r1/codeforces for more information."
-        )
+        raise ValueError(t("error.cf.tests_folder_unset"))
     if not await aiofiles.os.path.exists(tests_folder):
-        raise ValueError(
-            f"CF_TESTS_FOLDER path '{tests_folder}' does not exist! Please download the codeforces generated tests and set CF_TESTS_FOLDER to the folder path. See https://huggingface.co/datasets/open-r1/codeforces for more information."
-        )
+        raise ValueError(t("error.cf.tests_folder_missing", path=tests_folder))
     parquet_path = os.path.join(tests_folder, f"test_cases_{int(contest_id):04d}.parquet")
     if not await aiofiles.os.path.exists(parquet_path):
         return {}
@@ -102,7 +99,7 @@ async def score_submission(
     submission_language: str = "cpp",
 ) -> float:
     if submission_language not in ["python", "cpp"]:
-        raise ValueError(f"Invalid submission language: {submission_language}")
+        raise ValueError(t("error.cf.invalid_language", language=submission_language))
     test_cases = problem_data["official_tests"] + (await get_generated_tests(problem_data["id"]))
     # invalid/not a coding problem
     if test_cases is None or len(test_cases) == 0:
@@ -143,4 +140,4 @@ async def score_submission(
     elif scoring_mode == "weighted_sum":
         return pass_fail_score + 0.1 * (passed_test_cases / len(test_cases))
     else:
-        raise ValueError(f"Invalid scoring mode: {scoring_mode}")
+        raise ValueError(t("error.cf.invalid_scoring_mode", mode=scoring_mode))

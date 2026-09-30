@@ -25,6 +25,7 @@ from typing import Callable, Dict, Literal, Optional
 from latex2sympy2_extended import NormalizationConfig
 from math_verify import LatexExtractionConfig, parse, verify
 
+from .i18n import t
 from .utils.code_providers import get_provider
 from .utils.competitive_programming import (
     SubtaskResult,
@@ -71,12 +72,12 @@ def accuracy_reward(completions: list[list[dict[str, str]]], solution: list[str]
             try:
                 reward = float(verify(gold_parsed, answer_parsed))
             except Exception as e:
-                print(f"verify failed: {e}, answer: {answer_parsed}, gold: {gold_parsed}")
+                print(t("error.rewards.verify_failed", error=e, answer=answer_parsed, gold=gold_parsed))
                 reward = None
         else:
             # If the gold solution is not parseable, we assign `None` to skip this example
             reward = None
-            print("Failed to parse gold solution: ", sol)
+            print(t("error.rewards.parse_gold_failed", solution=sol))
         rewards.append(reward)
 
     return rewards
@@ -156,7 +157,7 @@ def len_reward(completions: list[Dict[str, str]], solution: list[str], **kwargs)
         if len(gold_parsed) == 0:
             # Skip unparseable examples
             correctness.append(True)  # Treat as correct to avoid penalizing
-            print("Failed to parse gold solution: ", sol)
+            print(t("error.rewards.parse_gold_failed", solution=sol))
             continue
 
         answer_parsed = parse(
@@ -237,7 +238,7 @@ def get_cosine_scaled_reward(
             )
             if len(gold_parsed) == 0:
                 rewards.append(1.0)  # Skip unparseable examples
-                print("Failed to parse gold solution: ", sol)
+                print(t("error.rewards.parse_gold_failed", solution=sol))
                 continue
 
             answer_parsed = parse(
@@ -293,7 +294,7 @@ def get_repetition_penalty_reward(ngram_size: int, max_penalty: float, language:
     language: Language of the text, defaults to `en`. Used to choose the way to split the text into n-grams.
     """
     if max_penalty > 0:
-        raise ValueError(f"max_penalty {max_penalty} should not be positive")
+        raise ValueError(t("error.rewards.max_penalty_positive", max_penalty=max_penalty))
 
     if language == "en":
 
@@ -305,7 +306,7 @@ def get_repetition_penalty_reward(ngram_size: int, max_penalty: float, language:
         from transformers.utils.import_utils import _is_package_available
 
         if not _is_package_available("jieba"):
-            raise ValueError("Please install jieba to use Chinese language")
+            raise ValueError(t("error.rewards.jieba_required"))
 
         def zipngram(text: str, ngram_size: int):
             import jieba
@@ -314,9 +315,7 @@ def get_repetition_penalty_reward(ngram_size: int, max_penalty: float, language:
             return zip(*[seg_list[i:] for i in range(ngram_size)]), seg_list
 
     else:
-        raise ValueError(
-            f"Word splitting for language `{language}` is not yet implemented. Please implement your own zip-ngram function."
-        )
+        raise ValueError(t("error.rewards.language_not_implemented", language=language))
 
     def repetition_penalty_reward(completions, **kwargs) -> float:
         """
@@ -393,7 +392,7 @@ def ioi_code_reward(completions, test_batch_size: int = 1, provider_type: str = 
         try:
             return await task
         except Exception as e:
-            print(f"Error from {provider_type} worker: {e}")
+            print(t("error.rewards.e2b_worker", provider_type=provider_type, error=e))
             return SubtaskResult()
 
     problems_data = [dict(zip(kwargs.keys(), values)) for values in zip(*kwargs.values())]
@@ -446,7 +445,7 @@ def cf_code_reward(
         try:
             return await task
         except Exception as e:
-            print(f"Error from Piston worker: {e}")
+            print(t("error.rewards.piston_worker", error=e))
             return None
 
     # load problem data. undo separating kwargs by column
@@ -581,7 +580,7 @@ def code_reward(
     if enforce_same_language:
         all_same_language = all(v["language"] == language for v in verification_info)
         if not all_same_language:
-            raise ValueError("All verification_info must have the same language", verification_info)
+            raise ValueError(t("error.rewards.mixed_language"), verification_info)
 
     execution_provider = get_provider(
         provider_type=provider_type,

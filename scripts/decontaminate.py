@@ -32,6 +32,8 @@ import collections
 
 from tqdm import tqdm
 
+from open_r1.i18n import t
+
 
 def normalize_string(text: str) -> str:
     """Basic string normalization."""
@@ -69,26 +71,28 @@ def build_ngram_single(document: str, ngram_size: int = 8) -> set[str]:
 
 
 if __name__ == "__main__":
-    import argparse
+    from open_r1.i18n.argparse_help import make_parser
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--dataset", type=str, required=True, help="Name of the dataset to check for contamination.")
-    parser.add_argument("--config", type=str, default=None, help="Name of the dataset config to load.")
-    parser.add_argument("--split", type=str, default="train", help="Split to check for contamination, defaults to `train`.")
-    parser.add_argument("--ngram_size", type=int, default=8, help="Size of n-grams to build, defaults to 8.")
+    parser = make_parser()
     parser.add_argument(
-        "--problem_column", type=str, default="problem", help="Name of the column containing the problem (prompt)."
+        "--dataset", type=str, required=True, help=t("cli.decontaminate.help.dataset")
+    )
+    parser.add_argument("--config", type=str, default=None, help=t("cli.decontaminate.help.config"))
+    parser.add_argument("--split", type=str, default="train", help=t("cli.decontaminate.help.split"))
+    parser.add_argument("--ngram_size", type=int, default=8, help=t("cli.decontaminate.help.ngram_size"))
+    parser.add_argument(
+        "--problem_column", type=str, default="problem", help=t("cli.decontaminate.help.problem_column")
     )
     parser.add_argument(
         "--cleanup",
         action="store_true",
-        help="Whether to remove the contaminated rows before pushing the dataset.",
+        help=t("cli.decontaminate.help.cleanup"),
     )
     parser.add_argument(
         "--new_dataset_name",
         type=str,
         default=None,
-        help="New name for the dataset. If not provided, will reuse the name and add a `_decontaminated` to the name."
+        help=t("cli.decontaminate.help.new_dataset_name"),
     )
     args = parser.parse_args()
 
@@ -132,9 +136,15 @@ if __name__ == "__main__":
                 size_prior = len(dataset)
                 dataset = dataset.filter(lambda x: not x[col], num_proc=8)
                 if len(dataset) < size_prior:
-                    print(f"Removed {size_prior - len(dataset)} samples from '{col.replace('contaminated_', '')}'")
+                    print(
+                        t(
+                            "msg.decontaminate.removed_samples",
+                            count=size_prior - len(dataset),
+                            benchmark=col.replace("contaminated_", ""),
+                        )
+                    )
         dataset = dataset.remove_columns(contamination_cols)
-        print(f"Initial size: {initial_size}, Final size: {len(dataset)}")
+        print(t("msg.decontaminate.size_summary", initial=initial_size, final=len(dataset)))
         return dataset
 
     if args.cleanup:
@@ -143,4 +153,4 @@ if __name__ == "__main__":
     new_ds_name = args.new_dataset_name or f"{args.dataset}_decontaminated"
     config_name = args.config if args.config is not None else "default"
     url = ds.push_to_hub(new_ds_name, config_name=config_name, split="train")
-    print(f"Decontaminated dataset: {url}")
+    print(t("msg.decontaminate.result_url", url=url))

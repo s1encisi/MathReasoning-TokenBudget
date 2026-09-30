@@ -43,6 +43,7 @@ from transformers import set_seed
 from transformers.trainer_utils import get_last_checkpoint
 
 from open_r1.configs import ScriptArguments, SFTConfig
+from open_r1.i18n import t
 from open_r1.utils import get_dataset, get_model, get_tokenizer
 from open_r1.utils.callbacks import get_callbacks
 from open_r1.utils.wandb_logging import init_wandb_training
@@ -70,16 +71,16 @@ def main(script_args, training_args, model_args):
     transformers.utils.logging.enable_default_handler()
     transformers.utils.logging.enable_explicit_format()
 
-    logger.info(f"Model parameters {model_args}")
-    logger.info(f"Script parameters {script_args}")
-    logger.info(f"Training parameters {training_args}")
+    logger.info(t("log.model_parameters", params=model_args))
+    logger.info(t("log.script_parameters", params=script_args))
+    logger.info(t("log.training_parameters", params=training_args))
 
     # Check for last checkpoint
     last_checkpoint = None
     if os.path.isdir(training_args.output_dir):
         last_checkpoint = get_last_checkpoint(training_args.output_dir)
     if last_checkpoint is not None and training_args.resume_from_checkpoint is None:
-        logger.info(f"Checkpoint detected, resuming training at {last_checkpoint=}.")
+        logger.info(t("log.checkpoint_detected", checkpoint=last_checkpoint))
 
     if "wandb" in training_args.report_to:
         init_wandb_training(training_args)
@@ -92,7 +93,7 @@ def main(script_args, training_args, model_args):
     model = get_model(model_args, training_args)
 
     if tokenizer.chat_template is None:
-        logger.info("No chat template provided, defaulting to ChatML.")
+        logger.info(t("log.no_chat_template"))
         model, tokenizer = setup_chat_format(model, tokenizer, format="chatml")
 
     ############################
@@ -132,7 +133,7 @@ def main(script_args, training_args, model_args):
     # to avoid unbounded generation in the transformers `pipeline()` function
     trainer.model.generation_config.eos_token_id = tokenizer.eos_token_id
     trainer.save_model(training_args.output_dir)
-    logger.info(f"Model saved to {training_args.output_dir}")
+    logger.info(t("log.model_saved", output_dir=training_args.output_dir))
 
     # Save everything else on main process
     kwargs = {
@@ -159,7 +160,7 @@ def main(script_args, training_args, model_args):
     # push to hub
     #############
     if training_args.push_to_hub:
-        logger.info("Pushing to hub...")
+        logger.info(t("log.pushing_to_hub"))
         trainer.push_to_hub(**kwargs)
 
 

@@ -16,6 +16,7 @@ from typing import List, Optional
 
 from open_r1.utils.evaluation import SUPPORTED_BENCHMARKS, run_benchmark_jobs
 from open_r1.configs import SFTConfig
+from open_r1.i18n import t
 from trl import ModelConfig, TrlParser
 
 
@@ -23,16 +24,16 @@ from trl import ModelConfig, TrlParser
 class ScriptArguments:
     model_id: str = field(
         default="deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
-        metadata={"help": "The Hub model id to push the model to."},
+        metadata={"help": t("cli.benchmarks.help.model_id")},
     )
-    model_revision: str = field(default="main", metadata={"help": "The Hub model branch to push the model to."})
-    trust_remote_code: bool = field(default=False, metadata={"help": "Trust the remote code."})
+    model_revision: str = field(default="main", metadata={"help": t("cli.benchmarks.help.model_revision")})
+    trust_remote_code: bool = field(default=False, metadata={"help": t("cli.benchmarks.help.trust_remote_code")})
     benchmarks: List[str] = field(
-        default_factory=lambda: [], metadata={"help": "The benchmarks to run after training."}
+        default_factory=lambda: [], metadata={"help": t("cli.benchmarks.help.benchmarks")}
     )
-    list_benchmarks: bool = field(default=False, metadata={"help": "List all supported benchmarks."})
+    list_benchmarks: bool = field(default=False, metadata={"help": t("cli.benchmarks.help.list_benchmarks")})
     system_prompt: Optional[str] = field(
-        default=None, metadata={"help": "The system prompt to use for the benchmark."}
+        default=None, metadata={"help": t("cli.benchmarks.help.system_prompt")}
     )
 
 
@@ -40,7 +41,7 @@ def main():
     parser = TrlParser(ScriptArguments)
     args = parser.parse_args_and_config()[0]
     if args.list_benchmarks:
-        print("Supported benchmarks:")
+        print(t("msg.benchmarks.supported_list"))
         for benchmark in SUPPORTED_BENCHMARKS:
             print(f"  - {benchmark}")
         return

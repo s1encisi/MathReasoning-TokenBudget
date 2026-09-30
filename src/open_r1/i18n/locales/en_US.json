@@ -1,0 +1,392 @@
+{
+  "_comment": "English (United States). This catalog is the fallback source of truth: every key added here must also be added to zh_CN.json.",
+  "meta": {
+    "name": "English",
+    "native_name": "English",
+    "direction": "ltr"
+  },
+  "fmt": {
+    "number": {
+      "group_sep": ",",
+      "decimal_sep": ".",
+      "group_size": 3,
+      "decimals": 2,
+      "compact_units": [
+        {"threshold": 1000000000, "suffix": "B"},
+        {"threshold": 1000000, "suffix": "M"},
+        {"threshold": 1000, "suffix": "K"}
+      ]
+    },
+    "percent": {
+      "pattern": "{value}%",
+      "decimals": 2
+    },
+    "currency": {
+      "default": "USD",
+      "pattern": "{symbol}{value}",
+      "decimals": 2,
+      "symbols": {
+        "_opaque": true,
+        "CNY": "CN¥",
+        "USD": "$",
+        "EUR": "€",
+        "GBP": "£",
+        "JPY": "¥"
+      }
+    },
+    "date": {
+      "short": "{YYYY}-{MM}-{DD}",
+      "long": "{WD}, {M}/{D}/{YYYY}",
+      "weekday_names": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    },
+    "time": {
+      "medium": "{HH}:{mm}:{ss}",
+      "short": "{HH}:{mm}"
+    },
+    "datetime": {
+      "short": "{YYYY}-{MM}-{DD} {HH}:{mm}:{ss}",
+      "long": "{WD}, {M}/{D}/{YYYY} {HH}:{mm}:{ss}"
+    },
+    "width": {
+      "ambiguous_wide": false
+    },
+    "units": {
+      "second": "s",
+      "minute": "min",
+      "hour": "h",
+      "sample": "sample",
+      "row": "row"
+    },
+    "wrap": {
+      "line_start_forbidden": "。，、；：？！）】》」』,.!?:;)]}",
+      "line_end_forbidden": "（【《「『([{"
+    }
+  },
+  "argparse": {
+    "usage": "usage: ",
+    "options": "options",
+    "optional_arguments": "optional arguments:",
+    "positional_arguments": "positional arguments",
+    "heading": "%(heading)s:",
+    "subcommands": "subcommands",
+    "help": "show this help message and exit",
+    "default_suffix": " (default: %(default)s)",
+    "error": "%(prog)s: error: %(message)s\n",
+    "warning": "%(prog)s: warning: %(message)s\n",
+    "unrecognized_arguments": "unrecognized arguments: %s",
+    "required_arguments": "the following arguments are required: %s",
+    "one_of_required": "one of the arguments %s is required",
+    "expected_one_argument": "expected one argument",
+    "expected_at_least_one": "expected at least one argument",
+    "expected_at_most_one": "expected at most one argument",
+    "invalid_choice": "invalid choice: %(value)r (choose from %(choices)s)",
+    "invalid_value": "invalid %(type)s value: %(value)r",
+    "argument_prefix": "argument %(argument_name)s: %(message)s",
+    "mutually_exclusive": "not allowed with argument %s",
+    "ambiguous_option": "ambiguous option: %(option)s could match %(matches)s",
+    "ignored_explicit_argument": "ignored explicit argument %r"
+  },
+  "cli": {
+    "generate": {
+      "description": "Run distilabel pipeline for generating responses with DeepSeek R1",
+      "help": {
+        "hf_dataset": "HuggingFace dataset to load",
+        "hf_dataset_config": "Dataset config to use",
+        "hf_dataset_split": "Dataset split to use",
+        "prompt_column": "Column of the dataset containing the prompts",
+        "prompt_template": "Template string for formatting prompts.",
+        "model": "Model name to use for generation",
+        "vllm_server_url": "URL of the vLLM server",
+        "temperature": "Temperature for generation",
+        "top_p": "Top-p value for generation",
+        "max_new_tokens": "Maximum number of new tokens to generate",
+        "num_generations": "Number of generations per problem",
+        "input_batch_size": "Batch size for input processing",
+        "client_replicas": "Number of client replicas for parallel processing",
+        "timeout": "Request timeout in seconds (default: 600)",
+        "retries": "Number of retries for failed requests (default: 0)",
+        "hf_output_dataset": "HuggingFace repo to push results to",
+        "private": "Whether to make the output dataset private when pushing to HF Hub"
+      }
+    },
+    "decontaminate": {
+      "help": {
+        "dataset": "Name of the dataset to check for contamination.",
+        "config": "Name of the dataset config to load.",
+        "split": "Split to check for contamination, defaults to `train`.",
+        "ngram_size": "Size of n-grams to build, defaults to 8.",
+        "problem_column": "Name of the column containing the problem (prompt).",
+        "cleanup": "Whether to remove the contaminated rows before pushing the dataset.",
+        "new_dataset_name": "New name for the dataset. If not provided, will reuse the name and add a `_decontaminated` to the name."
+      }
+    },
+    "tensor_parallel": {
+      "help": {
+        "model_name": "Hugging Face model name or path",
+        "revision": "Model revision if applicable",
+        "default_tp": "Default TP size (usually GPUs per node)"
+      }
+    },
+    "reasoning": {
+      "help": {
+        "dataset_name": "HuggingFace dataset to load",
+        "output_file": "Path of the JSONL file the generations are appended to",
+        "prompt_column": "Column of the dataset containing the prompts",
+        "uuid_column": "Column used to deduplicate already processed examples",
+        "api_addr": "Address of the OpenAI-compatible server, in `host:port` form",
+        "num_generations": "Number of generations per problem",
+        "prompt_template": "Template string for formatting prompts. Must contain a `{prompt}` placeholder.",
+        "temperature": "Temperature for generation",
+        "top_p": "Top-p value for generation",
+        "max_tokens": "Maximum number of new tokens to generate",
+        "max_concurrent": "Maximum number of concurrent requests"
+      }
+    },
+    "benchmarks": {
+      "help": {
+        "model_id": "The Hub model id to push the model to.",
+        "model_revision": "The Hub model branch to push the model to.",
+        "trust_remote_code": "Trust the remote code.",
+        "benchmarks": "The benchmarks to run after training.",
+        "list_benchmarks": "List all supported benchmarks.",
+        "system_prompt": "The system prompt to use for the benchmark."
+      }
+    },
+    "morph_router": {
+      "help": {
+        "host": "Hostname or IP address the server binds to",
+        "port": "Port the server listens on",
+        "max_num_sandboxes": "Maximum number of sandboxes that can be created simultaneously",
+        "api_key": "MorphCloud API key; falls back to the MORPH_API_KEY environment variable"
+      }
+    },
+    "configs": {
+      "script": {
+        "dataset_name": "Dataset name. Can be omitted if using dataset_mixture.",
+        "dataset_mixture": "Configuration for creating dataset mixtures with advanced options like shuffling."
+      },
+      "grpo": {
+        "benchmarks": "The benchmarks to run after training.",
+        "callbacks": "The callbacks to run during training.",
+        "chat_template": "The chat template to use.",
+        "hub_model_revision": "The Hub model branch to push the model to.",
+        "num_completions_to_print": "Number of completions to print.",
+        "overwrite_hub_revision": "Whether to overwrite the Hub revision.",
+        "push_to_hub_revision": "Whether to push to a Hub revision/branch.",
+        "system_prompt": "The optional system prompt to use.",
+        "wandb_log_unique_prompts": "Whether to log the unique prompts to wandb. This will create a new run for each unique prompt.",
+        "wandb_entity": "The entity to store runs under.",
+        "wandb_project": "The project to store runs under.",
+        "wandb_run_group": "The group to store runs under."
+      },
+      "sft": {
+        "benchmarks": "The benchmarks to run after training.",
+        "callbacks": "The callbacks to run during training.",
+        "chat_template": "The chat template to use.",
+        "system_prompt": "The optional system prompt to use for benchmarking.",
+        "hub_model_revision": "The Hub model branch to push the model to.",
+        "overwrite_hub_revision": "Whether to overwrite the Hub revision.",
+        "push_to_hub_revision": "Whether to push to a Hub revision/branch.",
+        "wandb_entity": "The entity to store runs under.",
+        "wandb_project": "The project to store runs under.",
+        "wandb_run_group": "The group to store runs under."
+      },
+      "grpo_script": {
+        "reward_funcs": "List of reward functions. Possible values: 'accuracy', 'format', 'reasoning_steps', 'cosine', 'repetition_penalty', 'length', tag_count', 'code', 'code_format'",
+        "cosine_min_value_wrong": "Minimum reward for wrong answers",
+        "cosine_max_value_wrong": "Maximum reward for wrong answers",
+        "cosine_min_value_correct": "Minimum reward for correct answers",
+        "cosine_max_value_correct": "Maximum reward for correct answers",
+        "cosine_max_len": "Maximum length for scaling",
+        "repetition_n_grams": "Number of n-grams for repetition penalty reward",
+        "repetition_max_penalty": "Maximum (negative) penalty for for repetition penalty reward",
+        "code_language": "Language for code format reward. Based on E2B supported languages https://e2b.dev/docs/code-interpreting/supported-languages",
+        "code_eval_test_batch_size": "for each generation, evaluate these many test cases in parallel, then check if any of them failed (0 score): if so stop evaluating; otherwise continue with the next batch of test cases. Useful to avoid overloading the eval server + save time on wrong solutions",
+        "code_eval_scoring_mode": "use fraction of passed test cases as reward. If false, use 0/1 scoring.",
+        "parallel_code_exec_per_proc": "Number of parallel E2B code executions per process. Default of 2 is suitable for the Free Hobby tier of E2B with 8 GPUs used for training.",
+        "dataset_prompt_column": "Column to use as prompts for training.",
+        "e2b_router_url": "URL for the E2B router. See scripts/e2b_router.py",
+        "morph_router_url": "URL for the MorphCloud router. See scripts/morph_router.py",
+        "code_provider": "Provider for code execution. Options: 'e2b', 'local', 'morph'.",
+        "ioi_provider": "Provider for IOI code execution. Options: 'piston', 'morph'.",
+        "max_completion_len": "Maximum number of characters in completion.",
+        "soft_punish_cache": "Minimum number of characters in completion."
+      }
+    }
+  },
+  "error": {
+    "configs": {
+      "dataset_source_required": "Either `dataset_name` or `dataset_mixture` must be provided",
+      "dataset_mixture_shape": "dataset_mixture must be a dictionary with a 'datasets' key. Expected format: {'datasets': [...], 'seed': int}",
+      "datasets_must_be_list": "'datasets' must be a list of dataset configurations",
+      "columns_inconsistent": "Column names must be consistent across all dataset configurations in a mixture. Found different column sets: {columns}"
+    },
+    "data": {
+      "no_datasets_loaded": "No datasets were loaded from the mixture configuration",
+      "dataset_source_required": "Either `dataset_name` or `dataset_mixture` must be provided"
+    },
+    "grpo": {
+      "prompt_column_unsupported": "Dataset Question Field Error: {column} is not supported."
+    },
+    "pass_rate": {
+      "prompt_column_unsupported": "Dataset Question Field Error: {column} is not supported."
+    },
+    "callbacks": {
+      "unknown_callback": "Callback {name} not found in CALLBACKS."
+    },
+    "evaluation": {
+      "unknown_benchmark": "Unknown benchmark {benchmark}"
+    },
+    "hub": {
+      "revision_exists": "Revision {revision} already exists. Use --overwrite_hub_revision to overwrite it."
+    },
+    "rewards": {
+      "max_penalty_positive": "max_penalty {max_penalty} should not be positive",
+      "jieba_required": "Please install jieba to use Chinese language",
+      "language_not_implemented": "Word splitting for language `{language}` is not yet implemented. Please implement your own zip-ngram function.",
+      "mixed_language": "All verification_info must have the same language",
+      "verify_failed": "verify failed: {error}, answer: {answer}, gold: {gold}",
+      "parse_gold_failed": "Failed to parse gold solution: {solution}",
+      "e2b_worker": "Error from {provider_type} worker: {error}",
+      "piston_worker": "Error from Piston worker: {error}"
+    },
+    "code_providers": {
+      "morph_api_key_missing": "MorphCloud API key not found. Please set the MORPH_API_KEY environment variable.",
+      "morph_import_missing": "MorphCloud is not available and required for this provider. Please install MorphCloud with `pip install morphcloud` and add an API key to a `.env` file.",
+      "morph_deps_missing": "Required MorphCloud dependencies not installed: {error}",
+      "dotenv_missing": "Warning: python-dotenv not installed. Environment variables must be set directly.",
+      "unknown_provider": "Unknown provider type: {provider_type}",
+      "operation_timed_out": "Operation timed out",
+      "e2b_executor": "Error from E2B executor: {error}",
+      "e2b_executor_async": "Error from E2B executor async: {error}",
+      "e2b_script": "Error in `_run_script` from E2B sandbox ID {sandbox_id} : {error}",
+      "e2b_kill": "Error from E2B executor kill with sandbox ID {sandbox_id} : {error}",
+      "morph_router": "Error from MorphCloud router: {error}",
+      "morph_executor": "Error from MorphCloud executor: {error}"
+    },
+    "piston": {
+      "endpoints_required": "For IOI/CF problems Piston endpoints running our IOI package are required. Please add a list of valid Piston endpoints to a PISTON_ENDPOINTS variable in a `.env` file.",
+      "no_endpoints": "No Piston endpoints provided. Please check your PISTON_ENDPOINTS environment variable.",
+      "endpoint_failed": "Error checking endpoint {endpoint}, dropping it ({error})",
+      "retrying": "Retrying in {delay:.2f} seconds [{endpoint_id}] {endpoint} - {error}",
+      "propagating": "Propagating exception {type}: {error}",
+      "release_failed": "Error releasing endpoint {endpoint}: {error}"
+    },
+    "morph": {
+      "problem_id_unknown": "Could not determine problem ID from files",
+      "api_key_required": "MORPH_API_KEY environment variable is required",
+      "instance_timeout": "Timeout while preparing instance: {error}",
+      "exec_timeout_retry": "Execution timed out, retrying ({attempt}/{max_retries})",
+      "exec_timeout_exhausted": "Execution timed out after multiple retries",
+      "exec_failed_retry": "Execution failed with {type}: {error}, retrying in {delay:.2f}s ({attempt}/{max_retries})",
+      "exec_failed": "Execution failed after {max_retries} retries: {type}: {error}",
+      "exec_failed_multiple": "Execution failed after multiple retries: {error}"
+    },
+    "cf": {
+      "invalid_language": "Invalid submission language: {language}",
+      "scoring_failed": "Error scoring submission: {error}",
+      "invalid_scoring_mode": "Invalid scoring mode: {mode}",
+      "tests_folder_unset": "CF_TESTS_FOLDER environment variable not set! Please download the codeforces generated tests and set CF_TESTS_FOLDER to the folder path. See https://huggingface.co/datasets/open-r1/codeforces for more information.",
+      "tests_folder_missing": "CF_TESTS_FOLDER path '{path}' does not exist! Please download the codeforces generated tests and set CF_TESTS_FOLDER to the folder path. See https://huggingface.co/datasets/open-r1/codeforces for more information."
+    },
+    "router": {
+      "morph_api_key_missing": "MorphCloud API key not provided. Please set MORPH_API_KEY environment variable or use --api_key."
+    },
+    "sandbox": {
+      "request_failed": "Request failed with status code: {status}",
+      "morph_request_failed": "Request to MorphCloud router failed with status code: {status}",
+      "morph_communication_error": "Error communicating with MorphCloud router: {error}"
+    },
+    "i18n": {
+      "fillchar_length": "fillchar must be exactly one character"
+    }
+  },
+  "log": {
+    "model_parameters": "Model parameters {params}",
+    "script_parameters": "Script parameters {params}",
+    "training_parameters": "Training parameters {params}",
+    "checkpoint_detected": "Checkpoint detected, resuming training at {checkpoint}.",
+    "no_chat_template": "No chat template provided, defaulting to ChatML.",
+    "model_saved": "Model saved to {output_dir}",
+    "pushing_to_hub": "Pushing to hub...",
+    "process_summary": "Process rank: {rank}, device: {device}, n_gpu: {n_gpu} distributed training: {distributed}, 16-bits training: {fp16}",
+    "dataset": {
+      "loading": "Loading dataset: {name}",
+      "mixture_creating": "Creating dataset mixture with {count} datasets",
+      "mixture_loading": "Loading dataset for mixture: {id} (config: {config})",
+      "subsampled": "Subsampled dataset '{id}' (config: {config}) with weight={weight} to {count} examples",
+      "mixture_created": "Created dataset mixture with {count} examples",
+      "split_done": "Split dataset into train and test sets with test size: {test_size}"
+    },
+    "hub": {
+      "repo_created": "Created target repo at {url}",
+      "pushing_revision": "Pushing to the Hub revision {revision}...",
+      "pushed": "Pushed to {url} revision {revision} successfully!",
+      "reducing_gpus": "Reducing num_gpus from {before} to {after} to make num_heads divisible by num_gpus",
+      "commit_message": "Add {revision} checkpoint"
+    },
+    "evaluation": {
+      "launching": "Launching benchmark `{benchmark}`"
+    },
+    "callbacks": {
+      "checkpoint_pushed": "Checkpoint {step} pushed to hub."
+    },
+    "piston": {
+      "subset_endpoints": "Using a subset of piston endpoints for GPU#{gpu}"
+    },
+    "morph": {
+      "base_snapshot": "Creating base snapshot with build-essential cmake and g++"
+    },
+    "code_patcher": {
+      "original": "ORIGINAL:",
+      "patched": "PATCHED:"
+    }
+  },
+  "msg": {
+    "generate": {
+      "running_with_arguments": "Running with arguments:",
+      "loading_dataset": "Loading '{dataset}' (config: {config}, split: {split}) dataset...",
+      "dataset_loaded": "Dataset loaded!",
+      "running_pipeline": "Running generation pipeline...",
+      "pipeline_finished": "Generation pipeline finished!",
+      "pushing_dataset": "Pushing resulting dataset to '{repo}'...",
+      "dataset_pushed": "Dataset pushed!"
+    },
+    "benchmarks": {
+      "supported_list": "Supported benchmarks:"
+    },
+    "decontaminate": {
+      "removed_samples": "Removed {count} samples from '{benchmark}'",
+      "size_summary": "Initial size: {initial}, Final size: {final}",
+      "result_url": "Decontaminated dataset: {url}"
+    },
+    "upload_details": {
+      "dataset_url": "Dataset available at: {url}"
+    },
+    "router": {
+      "morph_starting": "Starting MorphCloud Router on {host}:{port}"
+    },
+    "reasoning": {
+      "api_error": "API error (will retry): {error}",
+      "processing_error": "Error processing example",
+      "processing_error_detail": "Error processing example: {error}",
+      "resuming": "Found {count} already processed examples, resuming from there...",
+      "task_failed": "Task failed: {error}",
+      "progress_desc": "Generating responses",
+      "progress_unit": "row"
+    },
+    "tensor_parallel": {
+      "config_failed": "Warning: Failed to fetch config for {model}@{revision}: {error}"
+    },
+    "benchmark_e2b": {
+      "title": "## Benchmark Results",
+      "progress_desc": "Benchmarking samples",
+      "header_sample_size": "Sample Size",
+      "header_parallelization": "Parallelization",
+      "header_execution_time": "Execution Time (s)",
+      "header_mean_reward": "Mean Reward",
+      "header_min_reward": "Min Reward",
+      "header_max_reward": "Max Reward"
+    }
+  }
+}

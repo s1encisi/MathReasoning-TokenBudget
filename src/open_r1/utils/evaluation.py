@@ -1,6 +1,7 @@
 import subprocess
 from typing import TYPE_CHECKING, Dict, Union
 
+from ..i18n import t
 from .hub import get_gpu_count_for_vllm, get_param_count_from_repo_id
 
 
@@ -111,8 +112,8 @@ def run_benchmark_jobs(training_args: Union["SFTConfig", "GRPOConfig"], model_ar
         # that just evaluates on `ifeval` and `mt_bench` etc.
 
     for benchmark in benchmarks:
-        print(f"Launching benchmark `{benchmark}`")
+        print(t("log.evaluation.launching", benchmark=benchmark))
         if benchmark in get_lighteval_tasks():
             run_lighteval_job(benchmark, training_args, model_args)
         else:
-            raise ValueError(f"Unknown benchmark {benchmark}")
+            raise ValueError(t("error.evaluation.unknown_benchmark", benchmark=benchmark))

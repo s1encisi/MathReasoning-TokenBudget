@@ -28,7 +28,9 @@ from tqdm.auto import tqdm
 from dotenv import load_dotenv
 load_dotenv()
 
+from open_r1.i18n import format_number, render_table, t
 from open_r1.rewards import code_reward
+
 
 def benchmark_code_reward(example):
     start_time = time.time()
@@ -49,7 +51,7 @@ if __name__ == "__main__":
     # Store results for table formatting
     results = []
     
-    for num_samples in tqdm([16, 64,256], desc="Benchmarking samples"):
+    for num_samples in tqdm([16, 64, 256], desc=t("msg.benchmark_e2b.progress_desc")):
         for num_parallel in parallel_dict[num_samples]:
             code_dataset = load_dataset("open-r1/verifiable-coding-problems-python_decontaminated")
             code_dataset = code_dataset["train"].shuffle(seed=42).select(range(num_samples))
@@ -76,10 +78,25 @@ if __name__ == "__main__":
                 "max_reward": max_reward
             })
     
-    print("\n## Benchmark Results\n")
-    print("| Sample Size | Parallelization | Execution Time (s) | Mean Reward | Min Reward | Max Reward |")
-    print("|:-----------:|:---------------:|------------------:|:-----------:|:-----------:|:-----------:|")
-    
-    for result in results:
-        print(f"| {result['num_samples']:^11} | {result['num_parallel']:^15} | {result['execution_time']:17.2f} | {result['mean_reward']:^11.4f} | {result['min_reward']:^11.4f} | {result['max_reward']:^11.4f} |")
-    
+    headers = [
+        t("msg.benchmark_e2b.header_sample_size"),
+        t("msg.benchmark_e2b.header_parallelization"),
+        t("msg.benchmark_e2b.header_execution_time"),
+        t("msg.benchmark_e2b.header_mean_reward"),
+        t("msg.benchmark_e2b.header_min_reward"),
+        t("msg.benchmark_e2b.header_max_reward"),
+    ]
+    rows = [
+        [
+            format_number(result["num_samples"], decimals=0),
+            format_number(result["num_parallel"], decimals=0),
+            format_number(result["execution_time"], decimals=2),
+            format_number(result["mean_reward"], decimals=4),
+            format_number(result["min_reward"], decimals=4),
+            format_number(result["max_reward"], decimals=4),
+        ]
+        for result in results
+    ]
+    print(f"\n{t('msg.benchmark_e2b.title')}\n")
+    print(render_table(headers, rows, aligns=["right"] * len(headers)))
+
