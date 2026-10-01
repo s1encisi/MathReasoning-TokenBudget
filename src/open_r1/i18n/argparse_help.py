@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright 2025 The HuggingFace Team. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,8 +26,8 @@ from __future__ import annotations
 
 import argparse
 import shutil
+from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
-from typing import Iterator, Optional, Sequence
 
 from .catalog import t
 from .formatting import display_width, pad, wrap
@@ -100,7 +99,7 @@ class LocaleAwareHelpFormatter(argparse.HelpFormatter):
         prog: str,
         indent_increment: int = 2,
         max_help_position: int = 24,
-        width: Optional[int] = None,
+        width: int | None = None,
     ) -> None:
         if width is None:
             width = max(shutil.get_terminal_size().columns - 2, 40)
@@ -111,9 +110,7 @@ class LocaleAwareHelpFormatter(argparse.HelpFormatter):
         """重新按显示宽度统计最长的选项名，避免中文下低估列宽。"""
         super().add_arguments(actions)
         widths = [
-            display_width(self._format_action_invocation(action))
-            for action in actions
-            if action.help is not _SUPPRESS
+            display_width(self._format_action_invocation(action)) for action in actions if action.help is not _SUPPRESS
         ]
         if widths:
             self._action_max_length = max(self._action_max_length, max(widths))
@@ -137,18 +134,14 @@ class LocaleAwareHelpFormatter(argparse.HelpFormatter):
         action_header = self._format_action_invocation(action)
 
         if not action.help:
-            action_header = "%*s%s\n" % (self._current_indent, "", action_header)
+            action_header = f"{' ' * self._current_indent}{action_header}\n"
             indent_first = 0
         elif display_width(action_header) <= action_width:
             # 用显示宽度填充，中文选项名也能与说明列对齐
-            action_header = "%*s%s  " % (
-                self._current_indent,
-                "",
-                pad(action_header, action_width),
-            )
+            action_header = f"{' ' * self._current_indent}{pad(action_header, action_width)}  "
             indent_first = 0
         else:
-            action_header = "%*s%s\n" % (self._current_indent, "", action_header)
+            action_header = f"{' ' * self._current_indent}{action_header}\n"
             indent_first = help_position
 
         parts = [action_header]
@@ -157,9 +150,9 @@ class LocaleAwareHelpFormatter(argparse.HelpFormatter):
             help_text = self._expand_help(action)
             if help_text:
                 help_lines = self._split_lines(help_text, help_width)
-                parts.append("%*s%s\n" % (indent_first, "", help_lines[0]))
+                parts.append(f"{' ' * indent_first}{help_lines[0]}\n")
                 for line in help_lines[1:]:
-                    parts.append("%*s%s\n" % (help_position, "", line))
+                    parts.append(f"{' ' * help_position}{line}\n")
         elif not action_header.endswith("\n"):
             parts.append("\n")
 
@@ -206,9 +199,9 @@ class LocaleAwareArgumentParser(argparse.ArgumentParser):
 
 
 def make_parser(
-    description: Optional[str] = None,
-    prog: Optional[str] = None,
-    epilog: Optional[str] = None,
+    description: str | None = None,
+    prog: str | None = None,
+    epilog: str | None = None,
 ) -> LocaleAwareArgumentParser:
     """创建一个已绑定中文友好格式化器的 `ArgumentParser`。"""
     return LocaleAwareArgumentParser(

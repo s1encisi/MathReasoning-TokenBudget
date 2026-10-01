@@ -7,13 +7,13 @@ from .piston_client import get_piston_client_from_env, get_slurm_piston_endpoint
 
 
 __all__ = [
+    "SubtaskResult",
+    "add_includes",
+    "get_morph_client_from_env",
     "get_piston_client_from_env",
     "get_slurm_piston_endpoints",
-    "get_morph_client_from_env",
     "patch_code",
     "score_submission",
     "score_subtask",
     "score_subtasks",
-    "add_includes",
-    "SubtaskResult",
 ]

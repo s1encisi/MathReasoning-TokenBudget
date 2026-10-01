@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import os
 import random
 import re
@@ -9,6 +10,9 @@ from functools import lru_cache
 import aiohttp
 
 from ...i18n import t
+
+
+logger = logging.getLogger(__name__)
 
 
 class PistonError(Exception):
@@ -23,8 +27,8 @@ def get_piston_client_from_env(session=None):
     piston_endpoints = sorted(
         piston_endpoints.split(",") if piston_endpoints != "slurm" else get_slurm_piston_endpoints()
     )
-    gpu_nb = int(os.getenv("LOCAL_RANK", 0))  # per‑GPU index
-    world = int(os.getenv("WORLD_SIZE", 1))  # total GPUs
+    gpu_nb = int(os.getenv("LOCAL_RANK", "0"))  # per‑GPU index
+    world = int(os.getenv("WORLD_SIZE", "1"))  # total GPUs
     if world > 1:
         print(t("log.piston.subset_endpoints", gpu=gpu_nb))
         piston_endpoints = piston_endpoints[gpu_nb::world]
@@ -47,8 +51,8 @@ class PistonClient:
     export PISTON_REPO_URL=https://github.com/guipenedo/piston/releases/download/pkgs/index
     mkdir /piston
 
-    sed -i '/app.use(body_parser.urlencoded/c\    app.use(body_parser.urlencoded({ extended: true, limit: \"512mb\" }));' src/index.js
-    sed -i '/app.use(body_parser.json/c\    app.use(body_parser.json({ limit: \"512mb\" }));' src/index.js
+    sed -i '/app.use(body_parser.urlencoded/c\\    app.use(body_parser.urlencoded({ extended: true, limit: \"512mb\" }));' src/index.js
+    sed -i '/app.use(body_parser.json/c\\    app.use(body_parser.json({ limit: \"512mb\" }));' src/index.js
 
     # Start server in background
     node src```
@@ -72,8 +76,8 @@ class PistonClient:
         self.endpoint_tokens = asyncio.Queue(maxsize=max_requests_per_endpoint * len(self.base_endpoints))
 
         for _ in range(max_requests_per_endpoint):
-            for base_endpoint in self.base_endpoints:
-                self.endpoint_tokens.put_nowait(base_endpoint)
+            for endpoint in self.base_endpoints:
+                self.endpoint_tokens.put_nowait(endpoint)
         self._endpoint_failures = Counter()
         self._unhealthy_endpoints = set()
         self._endpoint_failures_lock = asyncio.Lock()
@@ -129,7 +133,7 @@ class PistonClient:
                 await asyncio.sleep(5)
                 await self.get_supported_runtimes()
             except Exception as e:
-                print(t("error.piston.endpoint_failed", endpoint=endpoint, error=e))
+                logger.warning(t("error.piston.endpoint_failed", endpoint=endpoint, error=e), exc_info=True)
                 self._unhealthy_endpoints.add(endpoint)
                 if len(self._unhealthy_endpoints) >= len(self.base_endpoints):
                     raise PistonError("All endpoints are unhealthy. Please check your Piston workers.")
@@ -193,16 +197,16 @@ class PistonClient:
                     await asyncio.sleep(retry_delay)
                 else:
                     await self._check_failed_endpoint(endpoint)
-            except Exception as e:
-                print(t("error.piston.propagating", type=type(e), error=e))
-                raise e
+            except Exception:
+                logger.exception("Unexpected Piston execution error")
+                raise
             finally:
                 # Ensure endpoint is always released, even if an exception occurs
                 if endpoint is not None:
                     try:
                         await self._release_endpoint(endpoint)
                     except Exception as e:
-                        print(t("error.piston.release_failed", endpoint=endpoint, error=e))
+                        logger.warning(t("error.piston.release_failed", endpoint=endpoint, error=e), exc_info=True)
                     endpoint = None
 
 
@@ -210,7 +214,10 @@ def get_slurm_piston_endpoints():
     """Get list of active piston worker endpoints from squeue output"""
     # Run squeue command to get job name, hostname and status, filtering for RUNNING state
     result = subprocess.run(
-        ["squeue", '--format="%j %N %T"', "--noheader", "--states=RUNNING"], capture_output=True, text=True
+        ["squeue", '--format="%j %N %T"', "--noheader", "--states=RUNNING"],
+        capture_output=True,
+        text=True,
+        check=False,
     )
 
     # Split output into lines and skip header

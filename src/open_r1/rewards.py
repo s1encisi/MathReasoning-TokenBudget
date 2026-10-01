@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright 2025 The HuggingFace Team. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,10 +16,12 @@
 
 import asyncio
 import json
+import logging
 import math
 import re
+from collections.abc import Callable
 from functools import partial, update_wrapper
-from typing import Callable, Dict, Literal, Optional
+from typing import Literal
 
 from latex2sympy2_extended import NormalizationConfig
 from math_verify import LatexExtractionConfig, parse, verify
@@ -32,13 +33,16 @@ from .utils.competitive_programming import (
     add_includes,
     get_morph_client_from_env,
     get_piston_client_from_env,
+    patch_code as cf_patch_code,
+    score_submission as cf_score_submission,
+    score_subtask,
 )
-from .utils.competitive_programming import patch_code as cf_patch_code
-from .utils.competitive_programming import score_submission as cf_score_submission
-from .utils.competitive_programming import score_subtask
 
 
-def accuracy_reward(completions: list[list[dict[str, str]]], solution: list[str], **kwargs) -> list[Optional[float]]:
+logger = logging.getLogger(__name__)
+
+
+def accuracy_reward(completions: list[list[dict[str, str]]], solution: list[str], **kwargs) -> list[float | None]:
     """Reward function that checks if the completion is the same as the ground truth."""
     contents = [completion[0]["content"] for completion in completions]
     rewards = []
@@ -72,7 +76,9 @@ def accuracy_reward(completions: list[list[dict[str, str]]], solution: list[str]
             try:
                 reward = float(verify(gold_parsed, answer_parsed))
             except Exception as e:
-                print(t("error.rewards.verify_failed", error=e, answer=answer_parsed, gold=gold_parsed))
+                logger.warning(
+                    t("error.rewards.verify_failed", error=e, answer=answer_parsed, gold=gold_parsed), exc_info=True
+                )
                 reward = None
         else:
             # If the gold solution is not parseable, we assign `None` to skip this example
@@ -130,7 +136,7 @@ def reasoning_steps_reward(completions, **kwargs):
     return [min(1.0, count / 3) for count in matches]
 
 
-def len_reward(completions: list[Dict[str, str]], solution: list[str], **kwargs) -> float:
+def len_reward(completions: list[dict[str, str]], solution: list[str], **kwargs) -> float:
     """Compute length-based rewards to discourage overthinking and promote token efficiency.
 
     Taken from the Kimi 1.5 tech report: https://huggingface.co/papers/2501.12599
@@ -392,7 +398,7 @@ def ioi_code_reward(completions, test_batch_size: int = 1, provider_type: str = 
         try:
             return await task
         except Exception as e:
-            print(t("error.rewards.e2b_worker", provider_type=provider_type, error=e))
+            logger.warning(t("error.rewards.e2b_worker", provider_type=provider_type, error=e), exc_info=True)
             return SubtaskResult()
 
     problems_data = [dict(zip(kwargs.keys(), values)) for values in zip(*kwargs.values())]
@@ -445,7 +451,7 @@ def cf_code_reward(
         try:
             return await task
         except Exception as e:
-            print(t("error.rewards.piston_worker", error=e))
+            logger.warning(t("error.rewards.piston_worker", error=e), exc_info=True)
             return None
 
     # load problem data. undo separating kwargs by column

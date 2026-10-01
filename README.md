@@ -47,9 +47,22 @@ GPU 训练沿用 Open-R1 的 Linux / CUDA 工作流。依赖约束由 [setup.py]
 
 示例配置启用了 `push_to_hub` 和 W&B 记录；仅在本地实验时，应先将 `push_to_hub` 设为 `false`，并调整 `report_to`、输出路径、批量大小与生成长度。模型权重和训练数据需另行获取。
 
-## 已验证范围
+## 开发检查与 CI
 
-本地检查通过 23 个 i18n 单元测试，以及仓库约定的 Ruff、isort 和 Flake8 检查；Python 文件语法解析通过。测试覆盖语言资源完整性、语言切换、占位符、中文排版与格式化。完整训练及模型效果评测需要额外 GPU 环境，本仓库尚未给出相应实测指标。
+[Tests 工作流](.github/workflows/tests.yml)分别运行代码质量检查和 CPU 单元测试。工具版本与 Ruff 规则固定在 [质量依赖](requirements-ci-quality.txt)和 [ruff.toml](ruff.toml)，本地与 CI 使用同一组 Makefile 入口。
+
+在 Linux / WSL 的 Python 3.10 虚拟环境中运行：
+
+```bash
+python3.10 -m venv .venv
+source .venv/bin/activate
+make install-ci-quality install-ci-tests
+make quality
+make package
+make test
+```
+
+[CPU 测试依赖](requirements-ci-tests.txt)不包含 vLLM、DeepSpeed 或外部代码沙箱服务。测试覆盖奖励函数、数据混合、中英文异常契约、中文排版，以及执行器失败和异步文件 I/O。数据集测试用临时生成的合成 JSON 数据调用真实 `datasets.load_dataset`，安装依赖后即可离线运行；这些夹具不用于模型效果评估。完整 GPU 训练及模型效果评测另需训练环境，不属于这组 CPU 检查。
 
 ## 来源与许可
 

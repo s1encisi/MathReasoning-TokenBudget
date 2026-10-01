@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# coding=utf-8
 # Copyright 2025 The HuggingFace Inc. team. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,7 +36,7 @@ from ..i18n import t
 logger = logging.getLogger(__name__)
 
 
-def push_to_hub_revision(training_args: SFTConfig | GRPOConfig, extra_ignore_patterns=[]) -> Future:
+def push_to_hub_revision(training_args: SFTConfig | GRPOConfig, extra_ignore_patterns=None) -> Future:
     """Pushes the model to branch on a Hub repo."""
 
     # Create a repo if it doesn't exist yet
@@ -55,7 +53,8 @@ def push_to_hub_revision(training_args: SFTConfig | GRPOConfig, extra_ignore_pat
     logger.info(t("log.hub.repo_created", url=repo_url))
     logger.info(t("log.hub.pushing_revision", revision=training_args.hub_model_revision))
     ignore_patterns = ["checkpoint-*", "*.pth"]
-    ignore_patterns.extend(extra_ignore_patterns)
+    if extra_ignore_patterns is not None:
+        ignore_patterns.extend(extra_ignore_patterns)
     future = upload_folder(
         repo_id=training_args.hub_model_id,
         folder_path=training_args.output_dir,
@@ -64,35 +63,35 @@ def push_to_hub_revision(training_args: SFTConfig | GRPOConfig, extra_ignore_pat
         ignore_patterns=ignore_patterns,
         run_as_future=True,
     )
-    logger.info(
-        t("log.hub.pushed", url=repo_url, revision=training_args.hub_model_revision)
-    )
+    logger.info(t("log.hub.pushed", url=repo_url, revision=training_args.hub_model_revision))
 
     return future
 
 
 def check_hub_revision_exists(training_args: SFTConfig | GRPOConfig):
     """Checks if a given Hub revision exists."""
-    if repo_exists(training_args.hub_model_id):
-        if training_args.push_to_hub_revision is True:
-            # First check if the revision exists
-            revisions = [rev.name for rev in list_repo_refs(training_args.hub_model_id).branches]
-            # If the revision exists, we next check it has a README file
-            if training_args.hub_model_revision in revisions:
-                repo_files = list_repo_files(
-                    repo_id=training_args.hub_model_id,
-                    revision=training_args.hub_model_revision,
-                )
-                if "README.md" in repo_files and training_args.overwrite_hub_revision is False:
-                    raise ValueError(t("error.hub.revision_exists", revision=training_args.hub_model_revision))
+    if repo_exists(training_args.hub_model_id) and training_args.push_to_hub_revision is True:
+        # First check if the revision exists
+        revisions = [rev.name for rev in list_repo_refs(training_args.hub_model_id).branches]
+        # If the revision exists, we next check it has a README file
+        if training_args.hub_model_revision in revisions:
+            repo_files = list_repo_files(
+                repo_id=training_args.hub_model_id,
+                revision=training_args.hub_model_revision,
+            )
+            if "README.md" in repo_files and training_args.overwrite_hub_revision is False:
+                raise ValueError(t("error.hub.revision_exists", revision=training_args.hub_model_revision))
 
 
 def get_param_count_from_repo_id(repo_id: str) -> int:
     """Function to get model param counts from safetensors metadata or find patterns like 42m, 1.5b, 0.5m or products like 8x7b in a repo ID."""
     try:
         metadata = get_safetensors_metadata(repo_id)
-        return list(metadata.parameter_count.values())[0]
+        return next(iter(metadata.parameter_count.values()))
     except Exception:
+        logger.debug(
+            "Safetensors metadata unavailable; estimating parameter count from the repository name", exc_info=True
+        )
         # Pattern to match products (like 8x7b) and single values (like 42m)
         pattern = r"((\d+(\.\d+)?)(x(\d+(\.\d+)?))?)([bm])"
         matches = re.findall(pattern, repo_id.lower())

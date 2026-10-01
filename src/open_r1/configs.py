@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright 2025 The HuggingFace Team. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +13,7 @@
 # limitations under the License.
 
 from dataclasses import dataclass, field
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 
 import trl
 from open_r1.i18n import t
@@ -25,10 +24,10 @@ class DatasetConfig:
     """Configuration for a dataset in a mixture."""
 
     id: str
-    config: Optional[str] = None
+    config: str | None = None
     split: str = "train"
-    columns: Optional[list[str]] = None
-    weight: Optional[float] = None
+    columns: list[str] | None = None
+    weight: float | None = None
 
 
 @dataclass
@@ -37,7 +36,7 @@ class DatasetMixtureConfig:
 
     datasets: list[DatasetConfig]
     seed: int = 0
-    test_split_size: Optional[float] = None
+    test_split_size: float | None = None
 
 
 @dataclass
@@ -68,10 +67,10 @@ class ScriptArguments(trl.ScriptArguments):
     """
 
     # Override the dataset_name to make it optional
-    dataset_name: Optional[str] = field(
+    dataset_name: str | None = field(
         default=None, metadata={"help": t("cli.configs.script.dataset_name")}
     )
-    dataset_mixture: Optional[dict[str, Any]] = field(
+    dataset_mixture: dict[str, Any] | None = field(
         default=None,
         metadata={"help": t("cli.configs.script.dataset_mixture")},
     )
@@ -125,15 +124,15 @@ class GRPOConfig(trl.GRPOConfig):
     """
 
     benchmarks: list[str] = field(
-        default_factory=lambda: [],
+        default_factory=list,
         metadata={"help": t("cli.configs.grpo.benchmarks")},
     )
     callbacks: list[str] = field(
-        default_factory=lambda: [],
+        default_factory=list,
         metadata={"help": t("cli.configs.grpo.callbacks")},
     )
-    chat_template: Optional[str] = field(default=None, metadata={"help": t("cli.configs.grpo.chat_template")})
-    hub_model_revision: Optional[str] = field(
+    chat_template: str | None = field(default=None, metadata={"help": t("cli.configs.grpo.chat_template")})
+    hub_model_revision: str | None = field(
         default="main", metadata={"help": t("cli.configs.grpo.hub_model_revision")}
     )
     num_completions_to_print: int = field(
@@ -143,7 +142,7 @@ class GRPOConfig(trl.GRPOConfig):
         default=False, metadata={"help": t("cli.configs.grpo.overwrite_hub_revision")}
     )
     push_to_hub_revision: bool = field(default=False, metadata={"help": t("cli.configs.grpo.push_to_hub_revision")})
-    system_prompt: Optional[str] = field(
+    system_prompt: str | None = field(
         default=None,
         metadata={"help": t("cli.configs.grpo.system_prompt")},
     )
@@ -151,15 +150,15 @@ class GRPOConfig(trl.GRPOConfig):
         default=True,
         metadata={"help": t("cli.configs.grpo.wandb_log_unique_prompts")},
     )
-    wandb_entity: Optional[str] = field(
+    wandb_entity: str | None = field(
         default=None,
         metadata={"help": t("cli.configs.grpo.wandb_entity")},
     )
-    wandb_project: Optional[str] = field(
+    wandb_project: str | None = field(
         default=None,
         metadata={"help": t("cli.configs.grpo.wandb_project")},
     )
-    wandb_run_group: Optional[str] = field(
+    wandb_run_group: str | None = field(
         default=None,
         metadata={"help": t("cli.configs.grpo.wandb_run_group")},
     )
@@ -172,19 +171,19 @@ class SFTConfig(trl.SFTConfig):
     """
 
     benchmarks: list[str] = field(
-        default_factory=lambda: [],
+        default_factory=list,
         metadata={"help": t("cli.configs.sft.benchmarks")},
     )
     callbacks: list[str] = field(
-        default_factory=lambda: [],
+        default_factory=list,
         metadata={"help": t("cli.configs.sft.callbacks")},
     )
-    chat_template: Optional[str] = field(default=None, metadata={"help": t("cli.configs.sft.chat_template")})
-    system_prompt: Optional[str] = field(
+    chat_template: str | None = field(default=None, metadata={"help": t("cli.configs.sft.chat_template")})
+    system_prompt: str | None = field(
         default=None,
         metadata={"help": t("cli.configs.sft.system_prompt")},
     )
-    hub_model_revision: Optional[str] = field(
+    hub_model_revision: str | None = field(
         default="main",
         metadata={"help": t("cli.configs.sft.hub_model_revision")},
     )
@@ -192,15 +191,15 @@ class SFTConfig(trl.SFTConfig):
         default=False, metadata={"help": t("cli.configs.sft.overwrite_hub_revision")}
     )
     push_to_hub_revision: bool = field(default=False, metadata={"help": t("cli.configs.sft.push_to_hub_revision")})
-    wandb_entity: Optional[str] = field(
+    wandb_entity: str | None = field(
         default=None,
         metadata={"help": t("cli.configs.sft.wandb_entity")},
     )
-    wandb_project: Optional[str] = field(
+    wandb_project: str | None = field(
         default=None,
         metadata={"help": t("cli.configs.sft.wandb_project")},
     )
-    wandb_run_group: Optional[str] = field(
+    wandb_run_group: str | None = field(
         default=None,
         metadata={"help": t("cli.configs.sft.wandb_run_group")},
     )
@@ -290,17 +289,17 @@ class GRPOScriptArguments(ScriptArguments):
         metadata={"help": t("cli.configs.grpo_script.dataset_prompt_column")},
     )
 
-    e2b_router_url: Optional[str] = field(
+    e2b_router_url: str | None = field(
         default=None,
         metadata={"help": t("cli.configs.grpo_script.e2b_router_url")},
     )
 
-    morph_router_url: Optional[str] = field(
+    morph_router_url: str | None = field(
         default=None,
         metadata={"help": t("cli.configs.grpo_script.morph_router_url")},
     )
 
-    code_provider: Optional[str] = field(
+    code_provider: str | None = field(
         default="e2b",
         metadata={
             "help": t("cli.configs.grpo_script.code_provider"),
@@ -308,7 +307,7 @@ class GRPOScriptArguments(ScriptArguments):
         },
     )
 
-    ioi_provider: Optional[str] = field(
+    ioi_provider: str | None = field(
         default="piston",
         metadata={
             "help": t("cli.configs.grpo_script.ioi_provider"),

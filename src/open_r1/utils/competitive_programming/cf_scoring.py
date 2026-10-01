@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import os
 from io import BytesIO
 from typing import Literal
@@ -8,6 +9,9 @@ from async_lru import alru_cache
 from ...i18n import t
 from .piston_client import PistonClient
 from .utils import batched
+
+
+logger = logging.getLogger(__name__)
 
 
 async def score_single_test_case(
@@ -50,7 +54,7 @@ async def score_single_test_case(
             language="cf_python3" if submission_language == "python" else "c++17",
         )
     except Exception as e:
-        print(t("error.cf.scoring_failed", error=e))
+        logger.warning(t("error.cf.scoring_failed", error=e), exc_info=True)
         return False
 
     return result

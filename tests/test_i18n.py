@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright 2025 The HuggingFace Team. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -168,7 +167,7 @@ class TestFormatting(unittest.TestCase):
         set_locale(ZH)
 
     def test_date_and_time(self):
-        moment = datetime.datetime(2026, 9, 30, 9, 11, 24)
+        moment = datetime.datetime(2026, 9, 30, 9, 11, 24, tzinfo=datetime.timezone.utc)
         self.assertEqual(format_date(moment), "2026年9月30日")
         self.assertEqual(format_date(moment, style="short"), "2026-09-30")
         self.assertEqual(format_time(moment), "09:11:24")
@@ -229,9 +228,8 @@ class TestCliHelpFormatter(unittest.TestCase):
 
         parser = make_parser(prog="demo")
         parser.add_argument("--model", type=str, required=True, help="生成所用的模型名称")
-        with self.assertRaises(SystemExit):
-            with _capture_stderr() as stream:
-                parser.parse_args([])
+        with self.assertRaises(SystemExit), _capture_stderr() as stream:
+            parser.parse_args([])
         self.assertIn("缺少以下必需参数", stream.getvalue())
 
 

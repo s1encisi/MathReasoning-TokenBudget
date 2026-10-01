@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright 2025 The HuggingFace Team. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,11 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Optional
+import logging
 
 import requests
 
 from ..i18n import t
+
+
+logger = logging.getLogger(__name__)
 
 
 class RoutedMorphSandbox:
@@ -49,11 +51,11 @@ class RoutedMorphSandbox:
 
     def run_code(
         self,
-        scripts: List[str],
-        languages: Optional[List[str]] = None,
-        timeout: Optional[int] = None,
-        request_timeout: Optional[int] = None,
-    ) -> List:
+        scripts: list[str],
+        languages: list[str] | None = None,
+        timeout: int | None = None,
+        request_timeout: int | None = None,
+    ) -> list:
         """
         Execute multiple scripts using MorphCloud via the router.
 
@@ -114,7 +116,7 @@ class RoutedMorphSandbox:
 
         except Exception as e:
             error = t("error.sandbox.morph_communication_error", error=str(e))
-            print(error)
+            logger.warning(error, exc_info=True)
 
             results = []
             for _ in scripts:

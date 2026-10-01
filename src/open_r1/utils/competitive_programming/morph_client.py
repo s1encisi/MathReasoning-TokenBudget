@@ -3,7 +3,8 @@ import json
 import logging
 import os
 import tempfile
-from typing import Any, Dict, Optional, Tuple
+from pathlib import Path
+from typing import Any
 
 from dotenv import load_dotenv
 from open_r1.i18n import t
@@ -22,6 +23,7 @@ else:
 # Silence verbose logs from dependencies
 logging.getLogger("paramiko").setLevel(logging.ERROR)
 logging.getLogger("httpx").setLevel(logging.ERROR)
+logger = logging.getLogger(__name__)
 
 
 class MorphCloudError(Exception):
@@ -31,9 +33,9 @@ class MorphCloudError(Exception):
 class MorphCloudExecutionClient:
     def __init__(
         self,
-        api_key: Optional[str] = None,
-        base_url: Optional[str] = None,
-        spans_log_path: Optional[str] = None,
+        api_key: str | None = None,
+        base_url: str | None = None,
+        spans_log_path: str | None = None,
     ):
         """
         Initialize the MorphCloud execution client.
@@ -65,6 +67,7 @@ class MorphCloudExecutionClient:
             snapshot = await self._get_or_create_base_snapshot()
             snapshot_id = snapshot.id
 
+        instance = None
         try:
             instance = await self.client.instances.astart(
                 snapshot_id, ttl_seconds=600
@@ -77,10 +80,10 @@ class MorphCloudExecutionClient:
                 try:
                     await instance.astop()
                 except Exception:
-                    pass
+                    logger.warning("Failed to stop the timed-out MorphCloud instance", exc_info=True)
             raise
 
-    async def _prepare_files(self, data: Dict[str, Any], temp_dir: str) -> Tuple[str, Dict[str, Any], Dict[str, str]]:
+    async def _prepare_files(self, data: dict[str, Any], temp_dir: str) -> tuple[str, dict[str, Any], dict[str, str]]:
         """
         Process files, determine problem ID, and prepare configuration.
 
@@ -124,20 +127,18 @@ class MorphCloudExecutionClient:
                 break
 
         config_path = os.path.join(temp_dir, "grader_config.json")
-        with open(config_path, "w") as f:
-            json.dump(grader_config, f)
+        await asyncio.to_thread(Path(config_path).write_text, json.dumps(grader_config), encoding="utf-8")
 
         local_files = {"grader_config.json": config_path}
 
         for file in data["files"]:
             local_path = os.path.join(temp_dir, os.path.basename(file["name"]))
-            with open(local_path, "w") as f:
-                f.write(file["content"])
+            await asyncio.to_thread(Path(local_path).write_text, file["content"], encoding="utf-8")
             local_files[file["name"]] = local_path
 
         return problem_id, grader_config, local_files
 
-    async def _upload_files(self, instance: Instance, local_files: Dict[str, str]) -> bool:
+    async def _upload_files(self, instance: Instance, local_files: dict[str, str]) -> bool:
         """
         Upload all necessary files to the instance.
 
@@ -190,7 +191,7 @@ class MorphCloudExecutionClient:
 
         return compile_result
 
-    async def _run_tests(self, instance: Instance, data: Dict[str, Any]) -> Tuple[str, str]:
+    async def _run_tests(self, instance: Instance, data: dict[str, Any]) -> tuple[str, str]:
         """
         Run tests and evaluate results.
 
@@ -226,7 +227,7 @@ class MorphCloudExecutionClient:
 
         return "0", "Unknown error"
 
-    async def _execute_with_instance(self, instance: Instance, data: Dict[str, Any], temp_dir: str) -> Tuple[str, str]:
+    async def _execute_with_instance(self, instance: Instance, data: dict[str, Any], temp_dir: str) -> tuple[str, str]:
         """Execute code using a prepared instance.
 
         Args:
@@ -242,7 +243,7 @@ class MorphCloudExecutionClient:
         """
         await instance.await_until_ready(timeout=300)
 
-        problem_id, grader_config, local_files = await self._prepare_files(data, temp_dir)
+        _problem_id, _grader_config, local_files = await self._prepare_files(data, temp_dir)
 
         await self._upload_files(instance, local_files)
 
@@ -254,7 +255,7 @@ class MorphCloudExecutionClient:
         score, feedback = await self._run_tests(instance, data)
         return score, feedback
 
-    async def _execute(self, data: Dict[str, Any]) -> Tuple[str, str]:
+    async def _execute(self, data: dict[str, Any]) -> tuple[str, str]:
         """
         Internal implementation of execute with no retry logic.
 
@@ -286,7 +287,7 @@ class MorphCloudExecutionClient:
                     timeout=TOTAL_EXECUTION_TIMEOUT,
                 )
 
-    async def execute(self, data: Dict[str, Any]) -> Tuple[str, str]:
+    async def execute(self, data: dict[str, Any]) -> tuple[str, str]:
         """
         Execute code on MorphCloud based on the provided data with enhanced debugging and recovery.
 
@@ -333,7 +334,7 @@ class MorphCloudExecutionClient:
                 if attempt < max_retries:
                     retry_delay = min(base_delay * (2**attempt), 30)  # Exponential backoff, capped at 30 seconds
 
-                    print(
+                    logger.warning(
                         t(
                             "error.morph.exec_failed_retry",
                             type=type(e).__name__,
@@ -341,11 +342,15 @@ class MorphCloudExecutionClient:
                             delay=retry_delay,
                             attempt=attempt + 1,
                             max_retries=max_retries,
-                        )
+                        ),
+                        exc_info=True,
                     )
                     await asyncio.sleep(retry_delay)
                 else:
-                    print(t("error.morph.exec_failed", max_retries=max_retries, type=type(e).__name__, error=str(e)))
+                    logger.warning(
+                        t("error.morph.exec_failed", max_retries=max_retries, type=type(e).__name__, error=str(e)),
+                        exc_info=True,
+                    )
                     return "0", t("error.morph.exec_failed_multiple", error=str(e))
 
     async def _get_or_create_base_snapshot(self):
@@ -385,11 +390,8 @@ class MorphCloudExecutionClient:
                         run_path = os.path.join(temp_dir, "run.sh")
 
                         # Write scripts to temp files
-                        with open(compile_path, "w") as f:
-                            f.write(compile_script)
-
-                        with open(run_path, "w") as f:
-                            f.write(run_script)
+                        await asyncio.to_thread(Path(compile_path).write_text, compile_script, encoding="utf-8")
+                        await asyncio.to_thread(Path(run_path).write_text, run_script, encoding="utf-8")
 
                         async with temp_instance:
                             # Install dependencies
@@ -410,10 +412,10 @@ class MorphCloudExecutionClient:
                             # Create snapshot from the prepared instance
                             final_snapshot = await temp_instance.asnapshot(digest="ioi-evaluation-morph")
 
-                except Exception as e:
+                except Exception:
                     # Ensure instance is stopped if anything fails
                     await temp_instance.astop()
-                    raise e
+                    raise
             else:
                 final_snapshot = base_snapshots[0]
 
@@ -508,7 +510,7 @@ ulimit -s unlimited
 if [ ! -f "graders/grader_config.json" ]; then
     echo "Error: graders/grader_config.json not found" >&2
     echo "Current directory contents:" >&2
-    find . -type f -o -type d | sed -e 's/[^-][^\/]*\//  |/g' -e 's/|\([^ ]\)/|-\1/' >&2
+    find . -type f -o -type d | sed -e 's/[^-][^\\/]*\\//  |/g' -e 's/|\\([^ ]\\)/|-\1/' >&2
     exit 1
 fi
 
@@ -751,6 +753,3 @@ def get_morph_client_from_env(session=None) -> MorphCloudExecutionClient:
         raise ValueError(t("error.morph.api_key_required"))
 
     return MorphCloudExecutionClient(api_key=api_key)
-
-
-# noqa: W293

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# coding=utf-8
 # Copyright 2025 The HuggingFace Inc. team. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +13,6 @@
 # limitations under the License.
 
 import subprocess
-from typing import List
 
 from transformers import TrainerCallback
 from transformers.trainer_callback import TrainerControl, TrainerState
@@ -29,7 +26,7 @@ from .hub import push_to_hub_revision
 def is_slurm_available() -> bool:
     # returns true if a slurm queueing system is available
     try:
-        subprocess.run(["sinfo"], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        subprocess.run(["sinfo"], check=True, capture_output=True)
         return True
     except FileNotFoundError:
         return False
@@ -83,7 +80,7 @@ CALLBACKS = {
 }
 
 
-def get_callbacks(train_config, model_config) -> List[TrainerCallback]:
+def get_callbacks(train_config, model_config) -> list[TrainerCallback]:
     callbacks = []
     for callback_name in train_config.callbacks:
         if callback_name not in CALLBACKS:

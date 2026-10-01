@@ -1,6 +1,5 @@
 import asyncio
 from dataclasses import asdict, dataclass, field
-from typing import Union
 
 from .ioi_utils import load_ioi_tests
 from .piston_client import PistonClient, PistonError
@@ -165,7 +164,7 @@ async def score_subtask(
     client: PistonClient,
     subtask: dict,
     submission: str,
-    test_case_run_cache: Union[dict, None] = None,
+    test_case_run_cache: dict | None = None,
     test_batch_size: int = 1,
 ) -> SubtaskResult:
     """

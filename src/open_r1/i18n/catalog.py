@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright 2025 The HuggingFace Team. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,7 +31,7 @@ import json
 import os
 import threading
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 
 # 缺省语言与回退语言。回退语言必须始终存在，否则缺键时无兜底。
@@ -67,7 +66,7 @@ _LOCALES_DIR = Path(__file__).parent / "locales"
 _LOCK = threading.RLock()
 
 # 扁平化后的目录缓存：locale -> {dotted.key: value}
-_CATALOGS: Dict[str, Dict[str, Any]] = {}
+_CATALOGS: dict[str, dict[str, Any]] = {}
 _ACTIVE_LOCALE = DEFAULT_LOCALE
 
 
@@ -95,21 +94,21 @@ def normalize_locale(code: str | None) -> str:
     return DEFAULT_LOCALE
 
 
-def available_locales() -> List[str]:
+def available_locales() -> list[str]:
     """返回磁盘上实际存在的语言资源列表（已排序）。"""
     if not _LOCALES_DIR.is_dir():
         return []
     return sorted(p.stem for p in _LOCALES_DIR.glob("*.json"))
 
 
-def _flatten(mapping: Dict[str, Any], prefix: str = "") -> Dict[str, Any]:
+def _flatten(mapping: dict[str, Any], prefix: str = "") -> dict[str, Any]:
     """把嵌套字典压平为点分键。
 
     * 以 `_` 开头的键视为注释，忽略。
     * 含 `"_opaque": true` 的字典不再展开，整体作为一个值保存
       （例如 `fmt.currency.symbols` 这类「代码 -> 值」映射表）。
     """
-    flat: Dict[str, Any] = {}
+    flat: dict[str, Any] = {}
     for key, value in mapping.items():
         if key.startswith("_"):
             continue
@@ -123,14 +122,14 @@ def _flatten(mapping: Dict[str, Any], prefix: str = "") -> Dict[str, Any]:
     return flat
 
 
-def load_catalog(locale: str) -> Dict[str, Any]:
+def load_catalog(locale: str) -> dict[str, Any]:
     """加载（并缓存）指定语言的扁平化目录。文件缺失时返回空字典。"""
     locale = normalize_locale(locale)
     with _LOCK:
         if locale in _CATALOGS:
             return _CATALOGS[locale]
         path = _LOCALES_DIR / f"{locale}.json"
-        catalog: Dict[str, Any] = {}
+        catalog: dict[str, Any] = {}
         if path.is_file():
             try:
                 with path.open("r", encoding="utf-8") as handle:
@@ -205,7 +204,7 @@ def config(key: str, default: Any = None, locale: str | None = None) -> Any:
     return value
 
 
-def missing_keys(locale: str, reference: str = FALLBACK_LOCALE) -> List[str]:
+def missing_keys(locale: str, reference: str = FALLBACK_LOCALE) -> list[str]:
     """列出 `locale` 相对 `reference` 缺失的键，用于翻译完整性检查。"""
     reference_catalog = load_catalog(reference)
     target_catalog = load_catalog(locale)

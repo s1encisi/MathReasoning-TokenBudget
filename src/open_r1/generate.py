@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Optional
 
 from distilabel.llms import OpenAILLM
 from distilabel.pipeline import Pipeline
@@ -24,10 +23,10 @@ from open_r1.i18n import t
 def build_distilabel_pipeline(
     model: str,
     base_url: str = "http://localhost:8000/v1",
-    prompt_column: Optional[str] = None,
+    prompt_column: str | None = None,
     prompt_template: str = "{{ instruction }}",
-    temperature: Optional[float] = None,
-    top_p: Optional[float] = None,
+    temperature: float | None = None,
+    top_p: float | None = None,
     max_new_tokens: int = 8192,
     num_generations: int = 1,
     input_batch_size: int = 64,

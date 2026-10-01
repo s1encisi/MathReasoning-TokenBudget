@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright 2025 The HuggingFace Team. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Optional
 
 import requests
 from e2b_code_interpreter.models import Execution, ExecutionError, Result
@@ -43,9 +41,9 @@ class RoutedSandbox:
     def run_code(
         self,
         scripts: list[str],
-        languages: Optional[List[str]] = None,
-        timeout: Optional[int] = None,
-        request_timeout: Optional[int] = None,
+        languages: list[str] | None = None,
+        timeout: int | None = None,
+        request_timeout: int | None = None,
     ) -> list[Execution]:
         """
         Executes a batch of scripts in the sandbox environment.

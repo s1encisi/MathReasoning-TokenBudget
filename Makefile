@@ -1,4 +1,6 @@
-.PHONY: style quality
+.PHONY: install install-ci-quality install-ci-tests style quality package test slow_test
+
+PYTHON ?= python
 
 # make sure to test the local checkout in scripts and not the pre-installed one (don't use quotes!)
 export PYTHONPATH = src
@@ -15,20 +17,29 @@ install:
 	uv pip install flash-attn --no-build-isolation && \
 	GIT_LFS_SKIP_SMUDGE=1 uv pip install -e ".[dev]"
 
+install-ci-quality:
+	$(PYTHON) -m pip install -r requirements-ci-quality.txt
+
+install-ci-tests:
+	$(PYTHON) -m pip install -r requirements-ci-tests.txt
+
 style:
-	ruff format --line-length 119 --target-version py310 $(check_dirs) setup.py
-	isort $(check_dirs) setup.py
+	$(PYTHON) -m ruff format --config ruff.toml $(check_dirs) setup.py
+	$(PYTHON) -m isort --settings-path setup.cfg $(check_dirs) setup.py
 
 quality:
-	ruff check --line-length 119 --target-version py310 $(check_dirs) setup.py
-	isort --check-only $(check_dirs) setup.py
-	flake8 --max-line-length 119 $(check_dirs) setup.py
+	$(PYTHON) -m ruff check --config ruff.toml $(check_dirs) setup.py
+	$(PYTHON) -m isort --settings-path setup.cfg --check-only $(check_dirs) setup.py
+	$(PYTHON) -m flake8 --config setup.cfg $(check_dirs) setup.py
+
+package:
+	$(PYTHON) -m pip wheel --no-deps --wheel-dir dist .
 
 test:
-	pytest -sv --ignore=tests/slow/ tests/
+	$(PYTHON) -m pytest -sv --ignore=tests/slow/ tests/
 
 slow_test:
-	pytest -sv -vv tests/slow/
+	$(PYTHON) -m pytest -sv -vv tests/slow/
 
 # Evaluation
 

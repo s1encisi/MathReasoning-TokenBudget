@@ -1,0 +1,7 @@
+# Shared by CI and `make install-ci-quality`; includes Flake8's rule providers.
+ruff==0.16.9
+isort==9.0.2
+flake8==7.4.1
+mccabe==0.7.0
+pycodestyle==2.15.0
+pyflakes==4.0.0

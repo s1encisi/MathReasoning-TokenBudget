@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright 2025 The HuggingFace Team. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,7 +31,8 @@ import datetime as _dt
 import locale as _locale
 import math
 import unicodedata
-from typing import Any, Iterable, List, Optional, Sequence, Tuple
+from collections.abc import Iterable, Sequence
+from typing import Any
 
 from .catalog import config, get_locale
 
@@ -70,7 +70,7 @@ def _line_end_forbidden() -> str:
 # ---------------------------------------------------------------------------
 
 
-def display_width(text: str, ambiguous_wide: Optional[bool] = None) -> int:
+def display_width(text: str, ambiguous_wide: bool | None = None) -> int:
     """计算字符串在等宽终端下的显示宽度（全角字符计 2）。
 
     Args:
@@ -121,15 +121,18 @@ def pad(text: str, width: int, align: str = "left", fillchar: str = " ") -> str:
 # ---------------------------------------------------------------------------
 
 
-def _tokenize(text: str) -> List[Tuple[str, bool]]:
+def _tokenize(text: str) -> list[tuple[str, bool]]:
     """切分为不可分割的排版单元。
 
     返回 `(token, breakable_before)` 列表：连续拉丁词/数字整体不可断，
     单个中日韩字符之间可断，空格为天然断点。
     """
-    tokens: List[Tuple[str, bool]] = []
-    is_wide = lambda ch: unicodedata.east_asian_width(ch) in ("W", "F")  # noqa: E731
-    buffer: List[str] = []
+    tokens: list[tuple[str, bool]] = []
+
+    def is_wide(ch: str) -> bool:
+        return unicodedata.east_asian_width(ch) in ("W", "F")
+
+    buffer: list[str] = []
 
     def flush() -> None:
         if buffer:
@@ -139,10 +142,7 @@ def _tokenize(text: str) -> List[Tuple[str, bool]]:
     # URL、路径、版本号等不应在标点处断开，因此把这些字符也并入「词」的范畴
     unbreakable_punctuation = "_-.~:/?#[]@!$&'()*+,;=%"
     for char in text:
-        if char.isspace():
-            flush()
-            tokens.append((char, True))
-        elif is_wide(char):
+        if char.isspace() or is_wide(char):
             flush()
             tokens.append((char, True))
         elif char.isalnum() or char in unbreakable_punctuation:
@@ -154,7 +154,7 @@ def _tokenize(text: str) -> List[Tuple[str, bool]]:
     return tokens
 
 
-def wrap(text: str, width: int) -> List[str]:
+def wrap(text: str, width: int) -> list[str]:
     """按显示宽度换行，并处理中文避头尾标点。
 
     Args:
@@ -165,8 +165,8 @@ def wrap(text: str, width: int) -> List[str]:
     start_forbidden = _line_start_forbidden()
     end_forbidden = _line_end_forbidden()
 
-    lines: List[str] = []
-    current: List[str] = []
+    lines: list[str] = []
+    current: list[str] = []
     current_width = 0
 
     def flush_line() -> None:
@@ -256,8 +256,8 @@ _ALIGN_LEFT, _ALIGN_RIGHT, _ALIGN_CENTER = "left", "right", "center"
 def render_table(
     headers: Sequence[str],
     rows: Sequence[Sequence[Any]],
-    aligns: Optional[Sequence[str]] = None,
-    max_width: Optional[int] = None,
+    aligns: Sequence[str] | None = None,
+    max_width: int | None = None,
 ) -> str:
     """按显示宽度渲染对齐的 ASCII 表格，并在总宽超限时自动折行压缩。
 
@@ -283,7 +283,7 @@ def render_table(
         floor = max(budget // max(column_count, 1), 2)
         # 按比例收缩，保证每列不小于 floor
         total = sum(widths)
-        scaled = [max(int(round(width * budget / total)), floor) for width in widths]
+        scaled = [max(round(width * budget / total), floor) for width in widths]
         delta = sum(scaled) - budget
         index = 0
         while delta > 0 and column_count:
@@ -322,7 +322,7 @@ def render_table(
 # ---------------------------------------------------------------------------
 
 
-def _separators() -> Tuple[str, str, int]:
+def _separators() -> tuple[str, str, int]:
     group_sep = config("fmt.number.group_sep", ",")
     decimal_sep = config("fmt.number.decimal_sep", ".")
     group_size = int(config("fmt.number.group_size", 3) or 3)
@@ -338,7 +338,7 @@ def _group_integer(digits: str, group_sep: str, group_size: int) -> str:
     return group_sep.join(reversed(chunks))
 
 
-def format_number(value: Any, decimals: Optional[int] = None, group: bool = True) -> str:
+def format_number(value: Any, decimals: int | None = None, group: bool = True) -> str:
     """格式化数字，使用当前语言的千分位与小数点符号。
 
     Args:
@@ -377,7 +377,7 @@ def format_int(value: Any, group: bool = True) -> str:
     return f"{'-' if number < 0 else ''}{digits}"
 
 
-def format_compact_number(value: Any, decimals: Optional[int] = None) -> str:
+def format_compact_number(value: Any, decimals: int | None = None) -> str:
     """按当前语言的习惯做数量级缩写（中文：万 / 亿；英文：K / M / B）。"""
     units = config("fmt.number.compact_units", []) or []
     try:
@@ -393,7 +393,7 @@ def format_compact_number(value: Any, decimals: Optional[int] = None) -> str:
     return format_number(number, decimals=decimals if decimals is not None else 0)
 
 
-def format_percent(value: Any, decimals: Optional[int] = None) -> str:
+def format_percent(value: Any, decimals: int | None = None) -> str:
     """格式化百分比。入参为比率（0.1534 -> `15.34%`）。"""
     pattern = str(config("fmt.percent.pattern", "{value}%"))
     if decimals is None:
@@ -405,7 +405,7 @@ def format_percent(value: Any, decimals: Optional[int] = None) -> str:
     return pattern.format(value=format_number(number, decimals=decimals))
 
 
-def format_currency(value: Any, currency: Optional[str] = None, decimals: Optional[int] = None) -> str:
+def format_currency(value: Any, currency: str | None = None, decimals: int | None = None) -> str:
     """格式化货币金额，符号与位置由语言资源决定。"""
     symbols = config("fmt.currency.symbols", {}) or {}
     currency = currency or str(config("fmt.currency.default", "CNY"))
@@ -449,9 +449,9 @@ def _coerce_datetime(value: Any) -> _dt.datetime:
     if isinstance(value, _dt.datetime):
         return value
     if isinstance(value, _dt.date):
-        return _dt.datetime(value.year, value.month, value.day)
+        return _dt.datetime.combine(value, _dt.time.min, tzinfo=_dt.timezone.utc)
     if isinstance(value, (int, float)):
-        return _dt.datetime.fromtimestamp(value)
+        return _dt.datetime.fromtimestamp(value, tz=_dt.timezone.utc).astimezone()
     if isinstance(value, str):
         text = value.strip()
         if text.endswith("Z"):
@@ -478,7 +478,7 @@ def format_time(value: Any, style: str = "medium") -> str:
     return _render_pattern(pattern, _coerce_datetime(value))
 
 
-def format_duration(seconds: Any, decimals: Optional[int] = None) -> str:
+def format_duration(seconds: Any, decimals: int | None = None) -> str:
     """格式化时长，单位取自语言资源（中文：`秒`）。"""
     unit = str(config("fmt.units.second", "s"))
     return f"{format_number(seconds, decimals=decimals if decimals is not None else 2)} {unit}".strip()
@@ -489,7 +489,7 @@ def format_duration(seconds: Any, decimals: Optional[int] = None) -> str:
 # ---------------------------------------------------------------------------
 
 
-def _posix_locale() -> Optional[str]:
+def _posix_locale() -> str | None:
     """尝试切到当前语言对应的系统区域；失败返回 `None`。"""
     if get_locale().lower().startswith("zh"):
         candidates = _ZH_COLLATION_LOCALE_CANDIDATES
@@ -504,7 +504,7 @@ def _posix_locale() -> Optional[str]:
     return None
 
 
-def collation_key(text: Any) -> Tuple[int, str]:
+def collation_key(text: Any) -> tuple[int, str]:
     """生成可用于 `sorted(key=...)` 的排序键。
 
     优先使用系统 `LC_COLLATE` 的 `strxfrm`（Linux 上 `zh_CN.UTF-8` 通常为拼音序）；
@@ -519,7 +519,7 @@ def collation_key(text: Any) -> Tuple[int, str]:
     return (1, unicodedata.normalize("NFKC", value).casefold())
 
 
-def sort_by_locale(items: Iterable[Any], key=None, reverse: bool = False) -> List[Any]:
+def sort_by_locale(items: Iterable[Any], key=None, reverse: bool = False) -> list[Any]:
     """按当前语言的排序规则排序，返回新列表。"""
     if key is None:
         return sorted(items, key=collation_key, reverse=reverse)

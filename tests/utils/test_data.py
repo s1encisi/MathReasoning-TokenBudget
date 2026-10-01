@@ -11,20 +11,46 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import json
+import tempfile
 import unittest
 from dataclasses import asdict
+from pathlib import Path
 
 from datasets import DatasetDict, load_dataset
 
 from open_r1.configs import DatasetConfig, DatasetMixtureConfig, ScriptArguments
+from open_r1.i18n import get_locale, set_locale
 from open_r1.utils.data import get_dataset
 
 
 class TestGetDataset(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.dataset_name = "trl-internal-testing/zen"
+        """Use synthetic conversations to test loading/mixtures without a remote dataset."""
+        fixture = tempfile.TemporaryDirectory(prefix="openr1-dataset-tests-")
+        cls.addClassCleanup(fixture.cleanup)
+        cls.dataset_name = fixture.name
         cls.dataset_config = "conversational_preference"
+        (Path(fixture.name) / "README.md").write_text(
+            "---\nconfigs:\n"
+            f"- config_name: {cls.dataset_config}\n"
+            "  data_files:\n"
+            "  - split: train\n    path: train.jsonl\n"
+            "  - split: test\n    path: test.jsonl\n---\n",
+            encoding="utf-8",
+        )
+        for split, count in (("train", 12), ("test", 4)):
+            rows = [
+                {
+                    "prompt": [{"role": "user", "content": f"Synthetic {split} prompt {index}"}],
+                    "chosen": [{"role": "assistant", "content": f"Synthetic {split} chosen {index}"}],
+                    "rejected": [{"role": "assistant", "content": f"Synthetic {split} rejected {index}"}],
+                }
+                for index in range(count)
+            ]
+            path = Path(fixture.name) / f"{split}.jsonl"
+            path.write_text("\n".join(json.dumps(row) for row in rows) + "\n", encoding="utf-8")
         cls.ref_dataset = load_dataset(cls.dataset_name, cls.dataset_config)
 
     def test_dataset_and_config_name(self):
@@ -115,14 +141,34 @@ class TestGetDataset(unittest.TestCase):
         dataset_mixture = DatasetMixtureConfig(
             datasets=dataset_configs,
         )
-        with self.assertRaises(ValueError) as context:
-            _ = ScriptArguments(dataset_mixture=asdict(dataset_mixture))
-        self.assertIn("Column names must be consistent", str(context.exception))
+        previous_locale = get_locale()
+        try:
+            for locale, expected in (
+                ("zh_CN", "混合数据集中各数据集配置的列名必须保持一致"),
+                ("en_US", "Column names must be consistent"),
+            ):
+                with self.subTest(locale=locale):
+                    set_locale(locale)
+                    with self.assertRaises(ValueError) as context:
+                        _ = ScriptArguments(dataset_mixture=asdict(dataset_mixture))
+                    self.assertIn(expected, str(context.exception))
+        finally:
+            set_locale(previous_locale)
 
     def test_no_dataset_name_or_mixture(self):
-        with self.assertRaises(ValueError) as context:
-            _ = ScriptArguments(dataset_name=None, dataset_mixture=None)
-        self.assertIn("Either `dataset_name` or `dataset_mixture` must be provided", str(context.exception))
+        previous_locale = get_locale()
+        try:
+            for locale, expected in (
+                ("zh_CN", "必须提供 `dataset_name` 或 `dataset_mixture` 其中之一"),
+                ("en_US", "Either `dataset_name` or `dataset_mixture` must be provided"),
+            ):
+                with self.subTest(locale=locale):
+                    set_locale(locale)
+                    with self.assertRaises(ValueError) as context:
+                        _ = ScriptArguments(dataset_name=None, dataset_mixture=None)
+                    self.assertEqual(str(context.exception), expected)
+        finally:
+            set_locale(previous_locale)
 
 
 if __name__ == "__main__":

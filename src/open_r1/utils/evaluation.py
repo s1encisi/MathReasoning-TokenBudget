@@ -1,12 +1,12 @@
 import subprocess
-from typing import TYPE_CHECKING, Dict, Union
+from typing import TYPE_CHECKING, Union
 
 from ..i18n import t
 from .hub import get_gpu_count_for_vllm, get_param_count_from_repo_id
 
 
 if TYPE_CHECKING:
-    from trl import GRPOConfig, SFTConfig, ModelConfig
+    from trl import GRPOConfig, ModelConfig, SFTConfig
 
 import base64
 import os
@@ -26,7 +26,7 @@ VLLM_SLURM_PREFIX = [
 
 
 def register_lighteval_task(
-    configs: Dict[str, str],
+    configs: dict[str, str],
     eval_suite: str,
     task_name: str,
     task_list: str,

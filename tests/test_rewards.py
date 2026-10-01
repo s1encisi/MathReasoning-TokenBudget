@@ -17,6 +17,7 @@ import unittest
 
 from dotenv import load_dotenv
 from open_r1.configs import GRPOScriptArguments
+from open_r1.i18n import get_locale, set_locale
 from open_r1.rewards import (
     accuracy_reward,
     format_reward,
@@ -282,10 +283,21 @@ class TestRewards(unittest.TestCase):
 
 class TestRepetitionPenaltyReward(unittest.TestCase):
     def test_positive_max_penalty_raises_value_error(self):
-        with self.assertRaises(ValueError):
-            get_repetition_penalty_reward(ngram_size=2, max_penalty=1.0)
-        with self.assertRaisesRegex(ValueError, "max_penalty 1.5 should not be positive"):
-            get_repetition_penalty_reward(ngram_size=2, max_penalty=1.5)
+        previous_locale = get_locale()
+        try:
+            for locale, expected in (
+                ("zh_CN", "max_penalty 1.5 不应为正数"),
+                ("en_US", "max_penalty 1.5 should not be positive"),
+            ):
+                with self.subTest(locale=locale):
+                    set_locale(locale)
+                    with self.assertRaises(ValueError):
+                        get_repetition_penalty_reward(ngram_size=2, max_penalty=1.0)
+                    with self.assertRaises(ValueError) as context:
+                        get_repetition_penalty_reward(ngram_size=2, max_penalty=1.5)
+                    self.assertEqual(str(context.exception), expected)
+        finally:
+            set_locale(previous_locale)
 
     def test_no_repetition(self):
         reward_fn = get_repetition_penalty_reward(ngram_size=2, max_penalty=-1.0)
